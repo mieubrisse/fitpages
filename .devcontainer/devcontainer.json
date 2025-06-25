@@ -9,6 +9,7 @@
       "extensions": [
         "bradlc.vscode-tailwindcss",
         "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
         "ms-vscode.vscode-typescript-next",
         "formulahendry.auto-rename-tag",
         "christian-kohler.path-intellisense",
@@ -21,7 +22,7 @@
       }
     }
   },
-  "forwardPorts": [5173, 4173],
+  "forwardPorts": [5173],
   "postCreateCommand": "npm install",
   "remoteUser": "node",
   "postStartCommand": "npm run dev"
