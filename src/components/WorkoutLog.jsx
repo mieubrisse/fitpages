@@ -14,11 +14,10 @@ function parseDateLocal(str) {
   return new Date(year, month - 1, day);
 }
 
-const WorkoutLog = () => {
+export default function WorkoutLog({ selectedDate, onDateSelect }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(() => formatDateLocal(new Date()));
   const [db, setDb] = useState(null);
 
   // Load DB only once
@@ -85,12 +84,12 @@ const WorkoutLog = () => {
   const goToPrevDay = () => {
     const prev = parseDateLocal(selectedDate);
     prev.setDate(prev.getDate() - 1);
-    setSelectedDate(formatDateLocal(prev));
+    onDateSelect(formatDateLocal(prev));
   };
   const goToNextDay = () => {
     const next = parseDateLocal(selectedDate);
     next.setDate(next.getDate() + 1);
-    setSelectedDate(formatDateLocal(next));
+    onDateSelect(formatDateLocal(next));
   };
   const today = formatDateLocal(new Date());
   const isToday = selectedDate === today;
@@ -103,9 +102,9 @@ const WorkoutLog = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-gray-900 via-gray-950 to-blue-950 py-8 px-2">
-      <div className="w-full max-w-3xl bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-blue-900 flex flex-col">
-        <div className="flex flex-col sm:flex-row sm:items-center mb-6 gap-4 justify-between">
+    <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-gray-900 via-gray-950 to-blue-950 px-2">
+      <div className="w-full max-w-3xl bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-2xl border border-blue-900 mt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center mb-4 gap-4 justify-between px-8 pt-8">
           <div className="flex items-center gap-2">
             <button
               className="px-3 py-1 bg-blue-700 text-white rounded-full shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
@@ -121,7 +120,7 @@ const WorkoutLog = () => {
                   : "bg-white/20 text-blue-900 hover:bg-blue-700 hover:text-white cursor-pointer"
               }`}
               onClick={() => {
-                if (!isToday) setSelectedDate(today);
+                if (!isToday) onDateSelect(today);
               }}
               disabled={isToday}
               title={isToday ? "Today" : "Go to today"}
@@ -143,52 +142,54 @@ const WorkoutLog = () => {
             Workouts for {selectedDate}
           </h2>
         </div>
-        <div className="rounded-2xl overflow-hidden border border-blue-900 bg-gray-900/90 shadow-inner">
+        <div className="rounded-2xl overflow-hidden border border-blue-900 bg-gray-900/90 shadow-inner mx-8 mb-8">
           <div className="overflow-x-auto">
-            <table className="min-w-full table-fixed border-separate border-spacing-0">
-              <thead className="sticky top-0 z-10 bg-gray-900/95">
-                <tr>
-                  <th className="px-6 py-3 font-semibold text-lg border-b border-blue-900 text-blue-200">
-                    Exercise
-                  </th>
-                  <th className="px-6 py-3 font-semibold text-lg border-b border-blue-900 text-blue-200 text-center">
-                    Reps
-                  </th>
-                  <th className="px-6 py-3 font-semibold text-lg border-b border-blue-900 text-blue-200">
-                    Weight
-                  </th>
-                  <th className="px-6 py-3 font-semibold text-lg border-b border-blue-900 text-blue-200 text-center">
-                    Comment
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="block overflow-y-auto h-[55vh] custom-scrollbar w-full">
-                {rows.length === 0 ? (
-                  <tr className="table w-full">
-                    <td colSpan={4} className="text-blue-300 text-center py-8 text-lg w-full">
-                      No data
-                    </td>
+            <div className="overflow-y-auto max-h-[55vh] custom-scrollbar">
+              <table className="min-w-full table-fixed border-separate border-spacing-0">
+                <thead className="sticky top-0 z-10 bg-gray-900/95">
+                  <tr>
+                    <th className="px-6 py-3 font-semibold text-lg border-b border-blue-900 text-blue-200">
+                      Exercise
+                    </th>
+                    <th className="px-6 py-3 font-semibold text-lg border-b border-blue-900 text-blue-200 text-center">
+                      Reps
+                    </th>
+                    <th className="px-6 py-3 font-semibold text-lg border-b border-blue-900 text-blue-200">
+                      Weight
+                    </th>
+                    <th className="px-6 py-3 font-semibold text-lg border-b border-blue-900 text-blue-200 text-center">
+                      Comment
+                    </th>
                   </tr>
-                ) : (
-                  rows.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-blue-900/40 transition table w-full">
-                      <td className="px-6 py-3 border-b border-blue-900 text-blue-300 font-medium text-base align-middle">
-                        {row.exercise_name}
-                      </td>
-                      <td className="px-6 py-3 border-b border-blue-900 text-blue-100 text-base text-center align-middle">
-                        {row.reps}
-                      </td>
-                      <td className="px-6 py-3 border-b border-blue-900 text-blue-100 text-base align-middle">
-                        {row.metric_weight}
-                      </td>
-                      <td className="px-6 py-3 border-b border-blue-900 text-blue-200 text-base text-center align-middle">
-                        {row.comment || <span className="text-blue-500">-</span>}
+                </thead>
+                <tbody>
+                  {rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="text-blue-300 text-center py-8 text-lg">
+                        No data
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    rows.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-blue-900/40 transition">
+                        <td className="px-6 py-3 border-b border-blue-900 text-blue-300 font-medium text-base align-middle text-center">
+                          {row.exercise_name}
+                        </td>
+                        <td className="px-6 py-3 border-b border-blue-900 text-blue-100 text-base text-center align-middle">
+                          {row.reps}
+                        </td>
+                        <td className="px-6 py-3 border-b border-blue-900 text-blue-100 text-base text-center align-middle">
+                          {row.metric_weight}
+                        </td>
+                        <td className="px-6 py-3 border-b border-blue-900 text-blue-200 text-base text-center align-middle">
+                          {row.comment || <span className="text-blue-500">-</span>}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -207,6 +208,4 @@ const WorkoutLog = () => {
       `}</style>
     </div>
   );
-};
-
-export default WorkoutLog;
+}
