@@ -4,6 +4,7 @@ import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { format, parseISO } from "date-fns";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import WorkoutLog from "../components/WorkoutLog";
 import initSqlJs from "sql.js";
 
@@ -25,24 +26,47 @@ function formatDateLocal(date) {
 }
 
 function getMonthRange(dateStr) {
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const first = new Date(year, month, 1);
-  const last = new Date(year, month + 1, 0);
+  // Parse the date string explicitly to avoid timezone issues
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day); // month - 1 because getMonth() is 0-indexed
+  const monthIndex = date.getMonth(); // 0-indexed: 0=Jan, 1=Feb, ..., 5=Jun, etc.
+  const first = new Date(year, monthIndex, 1);
+  const last = new Date(year, monthIndex + 1, 0);
   return [formatDateLocal(first), formatDateLocal(last)];
+}
+
+// Custom day component that highlights workout days
+function CustomDay({ workoutDays, ...props }) {
+  const dateStr = format(props.day, "yyyy-MM-dd");
+  const hasWorkout = workoutDays.includes(dateStr);
+
+  return (
+    <PickersDay
+      {...props}
+      sx={{
+        ...(hasWorkout && {
+          backgroundColor: "#4b5563", // lighter gray for workout days
+          color: "white",
+          "&:hover": {
+            backgroundColor: "#6b7280",
+          },
+        }),
+      }}
+    />
+  );
 }
 
 export default function WorkoutLogPage({ onBack }) {
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = new Date();
-    return d.toISOString().slice(0, 10);
+    return formatDateLocal(d);
   });
   const [workoutDays, setWorkoutDays] = useState([]);
 
   // Fetch workout days for the current month of selectedDate
   useEffect(() => {
     async function fetchWorkoutDays() {
+      console.log("Fetching workout days for selectedDate:", selectedDate);
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
       const response = await fetch("/FitNotes_Backup.fitnotes");
       const arrayBuffer = await response.arrayBuffer();
@@ -50,11 +74,16 @@ export default function WorkoutLogPage({ onBack }) {
 
       // Get the month range for the currently selected date
       const [start, end] = getMonthRange(selectedDate);
+      console.log("Month range:", start, "to", end);
       const query = `SELECT DISTINCT date FROM training_log WHERE date >= ? AND date <= ? ORDER BY date`;
       const result = db.exec(query, [start, end]);
+      console.log("SQL result:", result);
       if (result.length > 0) {
-        setWorkoutDays(result[0].values.map((row) => row[0]));
+        const days = result[0].values.map((row) => row[0]);
+        console.log("Setting workoutDays to:", days);
+        setWorkoutDays(days);
       } else {
+        console.log("Setting workoutDays to empty array");
         setWorkoutDays([]);
       }
     }
@@ -69,10 +98,14 @@ export default function WorkoutLogPage({ onBack }) {
 
   const handleMonthChange = (newDate) => {
     if (newDate) {
-      // When the month changes in the StaticDatePicker, update our selectedDate
-      // to the first day of that month so we fetch the correct workout days
-      const firstDayOfMonth = format(newDate, "yyyy-MM-01");
-      setSelectedDate(firstDayOfMonth);
+      const newMonthStr = format(newDate, "yyyy-MM");
+      const currentMonthStr = selectedDate.substring(0, 7); // Get YYYY-MM from selectedDate
+
+      // Only update selectedDate if we're actually changing to a different month
+      if (newMonthStr !== currentMonthStr) {
+        const firstDayOfMonth = format(newDate, "yyyy-MM-01");
+        setSelectedDate(firstDayOfMonth);
+      }
     }
   };
 
@@ -87,6 +120,9 @@ export default function WorkoutLogPage({ onBack }) {
               value={parseISO(selectedDate)}
               onChange={handleDateChange}
               onMonthChange={handleMonthChange}
+              slots={{
+                day: (props) => <CustomDay {...props} workoutDays={workoutDays} />,
+              }}
               sx={{
                 backgroundColor: "#1f2937",
                 color: "white",
@@ -103,13 +139,6 @@ export default function WorkoutLogPage({ onBack }) {
                 "& .MuiPickersCalendarHeader-root": {
                   color: "white",
                 },
-                "& .MuiPickersDay-root.Mui-disabled": {
-                  color: "#6b7280",
-                },
-              }}
-              shouldDisableDate={(date) => {
-                const dateStr = format(date, "yyyy-MM-dd");
-                return !workoutDays.includes(dateStr);
               }}
             />
           </LocalizationProvider>
