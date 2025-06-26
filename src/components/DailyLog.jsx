@@ -10,7 +10,6 @@ import {
   IconButton,
   Button,
   Box,
-  Typography,
   Container,
   Stack,
 } from "@mui/material";
@@ -145,12 +144,35 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
             <IconButton onClick={goToPrevDay} aria-label="Previous day" size="large">
               <ChevronLeft />
             </IconButton>
-            <Typography
-              variant="h6"
-              sx={{ minWidth: 120, textAlign: "center", fontWeight: "bold" }}
+            <Button
+              variant="text"
+              disableRipple
+              disabled={isToday}
+              onClick={() => !isToday && onDateSelect(today)}
+              sx={{
+                minWidth: 120,
+                fontWeight: "normal",
+                fontSize: "1.25rem",
+                textTransform: "none",
+                color: "text.primary",
+                backgroundColor: "transparent",
+                cursor: isToday ? "default" : "pointer",
+                transition: "background 0.2s, color 0.2s",
+                "&:hover": !isToday
+                  ? {
+                      backgroundColor: "primary.main",
+                      color: "primary.contrastText",
+                    }
+                  : {},
+                "&.Mui-disabled": {
+                  color: "text.primary",
+                  backgroundColor: "transparent",
+                  opacity: 1,
+                },
+              }}
             >
               {selectedDate}
-            </Typography>
+            </Button>
             <IconButton onClick={goToNextDay} aria-label="Next day" size="large" disabled={isToday}>
               <ChevronRight />
             </IconButton>
