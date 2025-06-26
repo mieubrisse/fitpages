@@ -1,32 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import DatabaseViewer from "./components/DatabaseViewer";
-import WorkoutLog from "./components/WorkoutLog";
-import Calendar from "./components/Calendar";
-import initSqlJs from "sql.js";
+import WorkoutLogPage from "./pages/WorkoutLogPage";
 import "./App.css";
-
-function formatDateLocal(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function getMonthRange(dateStr) {
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const first = new Date(year, month, 1);
-  const last = new Date(year, month + 1, 0);
-  return [formatDateLocal(first), formatDateLocal(last)];
-}
 
 function App() {
   const [screen, setScreen] = useState("home");
+
+  /*
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = new Date();
     return d.toISOString().slice(0, 10);
   });
+
   const [viewMonth, setViewMonth] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -63,6 +48,7 @@ function App() {
       setViewMonth(monthStr);
     }
   }, [selectedDate, viewMonth]);
+  */
 
   return (
     <div className="App min-h-screen bg-gray-900">
@@ -76,8 +62,8 @@ function App() {
               Table Explorer
             </button>
             <button
-              className="px-8 py-4 bg-green-600 text-white rounded-lg text-2xl font-semibold shadow hover:bg-green-500 transition-colors"
-              onClick={() => setScreen("workoutLog")}
+              className="px-8 py-4 bg-purple-600 text-white rounded-lg text-2xl font-semibold shadow hover:bg-purple-500 transition-colors"
+              onClick={() => setScreen("workoutLogNew")}
             >
               Workout Log
             </button>
@@ -94,28 +80,7 @@ function App() {
             <DatabaseViewer />
           </div>
         )}
-        {screen === "workoutLog" && (
-          <div className="flex flex-col md:flex-row items-start justify-center w-full">
-            <div className="md:mr-8 flex-shrink-0">
-              <Calendar
-                selectedDate={selectedDate}
-                onDateSelect={setSelectedDate}
-                workoutDays={workoutDays}
-                viewMonth={viewMonth}
-                onMonthChange={setViewMonth}
-              />
-            </div>
-            <div className="flex-grow w-full">
-              <button
-                className="m-4 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
-                onClick={() => setScreen("home")}
-              >
-                ← Back to Home
-              </button>
-              <WorkoutLog selectedDate={selectedDate} onDateSelect={setSelectedDate} />
-            </div>
-          </div>
-        )}
+        {screen === "workoutLogNew" && <WorkoutLogPage onBack={() => setScreen("home")} />}
       </main>
     </div>
   );
