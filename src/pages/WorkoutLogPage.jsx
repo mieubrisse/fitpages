@@ -63,7 +63,7 @@ export default function WorkoutLogPage({ onBack }) {
   });
   const [workoutDays, setWorkoutDays] = useState([]);
 
-  // Fetch workout days for the current month of selectedDate
+  // Fetch workout days for the current month of selectedDate plus adjacent months
   useEffect(() => {
     async function fetchWorkoutDays() {
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
@@ -72,9 +72,32 @@ export default function WorkoutLogPage({ onBack }) {
       const db = new SQL.Database(new Uint8Array(arrayBuffer));
 
       // Get the month range for the currently selected date
-      const [start, end] = getMonthRange(selectedDate);
-      const query = `SELECT DISTINCT date FROM training_log WHERE date >= ? AND date <= ? ORDER BY date`;
-      const result = db.exec(query, [start, end]);
+      const [currentStart, currentEnd] = getMonthRange(selectedDate);
+
+      // Calculate previous month range
+      const [year, month] = selectedDate.split("-").map(Number);
+      const prevMonth = month === 1 ? 12 : month - 1;
+      const prevYear = month === 1 ? year - 1 : year;
+      const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, "0")}-01`;
+      const [prevStart, prevEnd] = getMonthRange(prevMonthStr);
+
+      // Calculate next month range
+      const nextMonth = month === 12 ? 1 : month + 1;
+      const nextYear = month === 12 ? year + 1 : year;
+      const nextMonthStr = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
+      const [nextStart, nextEnd] = getMonthRange(nextMonthStr);
+
+      // Query for all three months
+      const query = `SELECT DISTINCT date FROM training_log WHERE (date >= ? AND date <= ?) OR (date >= ? AND date <= ?) OR (date >= ? AND date <= ?) ORDER BY date`;
+      const result = db.exec(query, [
+        prevStart,
+        prevEnd,
+        currentStart,
+        currentEnd,
+        nextStart,
+        nextEnd,
+      ]);
+
       if (result.length > 0) {
         const days = result[0].values.map((row) => row[0]);
         setWorkoutDays(days);
@@ -115,6 +138,7 @@ export default function WorkoutLogPage({ onBack }) {
               value={parseISO(selectedDate)}
               onChange={handleDateChange}
               onMonthChange={handleMonthChange}
+              showDaysOutsideCurrentMonth={true}
               shouldDisableDate={(date) => {
                 const today = new Date();
                 today.setHours(23, 59, 59, 999); // End of today
@@ -138,6 +162,10 @@ export default function WorkoutLogPage({ onBack }) {
                 },
                 "& .MuiPickersCalendarHeader-root": {
                   color: "white",
+                },
+                "& .MuiPickersDay-root.MuiPickersDay-dayOutsideMonth": {
+                  opacity: 0.3,
+                  color: "#9ca3af",
                 },
               }}
             />
