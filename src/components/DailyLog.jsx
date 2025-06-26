@@ -80,7 +80,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
             exercise_name: row[1],
             reps: row[2],
             metric_weight: row[3],
-            comment: row[4] || "-",
+            comment: row[4] ?? "",
           };
         });
         setRows(data);
@@ -199,43 +199,57 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           >
             <Table stickyHeader>
               <TableHead>
-                <TableRow>
+                <TableRow sx={{ bgcolor: "grey.900" }}>
                   <TableCell
                     sx={{
-                      bgcolor: "background.paper",
+                      bgcolor: "grey.900",
                       color: "text.primary",
                       fontWeight: "bold",
                       textAlign: "center",
+                      width: "40%",
+                      maxWidth: 0,
+                      borderRight: "1px solid",
+                      borderColor: "divider",
                     }}
                   >
                     Exercise
                   </TableCell>
                   <TableCell
                     sx={{
-                      bgcolor: "background.paper",
+                      bgcolor: "grey.900",
                       color: "text.primary",
                       fontWeight: "bold",
                       textAlign: "center",
+                      width: "10%",
+                      maxWidth: 0,
+                      borderRight: "1px solid",
+                      borderColor: "divider",
                     }}
                   >
                     Reps
                   </TableCell>
                   <TableCell
                     sx={{
-                      bgcolor: "background.paper",
+                      bgcolor: "grey.900",
                       color: "text.primary",
                       fontWeight: "bold",
                       textAlign: "center",
+                      width: "10%",
+                      maxWidth: 0,
+                      borderRight: "1px solid",
+                      borderColor: "divider",
                     }}
                   >
                     Weight
                   </TableCell>
                   <TableCell
                     sx={{
-                      bgcolor: "background.paper",
+                      bgcolor: "grey.900",
                       color: "text.primary",
                       fontWeight: "bold",
                       textAlign: "center",
+                      width: "40%",
+                      maxWidth: 0,
                     }}
                   >
                     Comment
@@ -259,18 +273,16 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                   </TableRow>
                 ) : (
                   rows.map((row, index) => (
-                    <TableRow
-                      key={index}
-                      sx={{
-                        "&:hover": {
-                          backgroundColor: "action.hover",
-                        },
-                      }}
-                    >
+                    <TableRow key={index}>
                       <TableCell
                         sx={{
                           color: "text.primary",
                           textAlign: "center",
+                          width: "40%",
+                          maxWidth: 0,
+                          borderRight: "1px solid",
+                          borderColor: "divider",
+                          wordBreak: "break-word",
                         }}
                       >
                         {row.exercise_name}
@@ -279,6 +291,11 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                         sx={{
                           color: "text.primary",
                           textAlign: "center",
+                          width: "10%",
+                          maxWidth: 0,
+                          borderRight: "1px solid",
+                          borderColor: "divider",
+                          wordBreak: "break-word",
                         }}
                       >
                         {row.reps}
@@ -287,17 +304,25 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                         sx={{
                           color: "text.primary",
                           textAlign: "center",
+                          width: "10%",
+                          maxWidth: 0,
+                          borderRight: "1px solid",
+                          borderColor: "divider",
+                          wordBreak: "break-word",
                         }}
                       >
-                        {row.metric_weight}
+                        {row.metric_weight} kg
                       </TableCell>
                       <TableCell
                         sx={{
                           color: "text.primary",
                           textAlign: "center",
+                          width: "40%",
+                          maxWidth: 0,
+                          wordBreak: "break-word",
                         }}
                       >
-                        {row.comment}
+                        {row.comment ? row.comment : ""}
                       </TableCell>
                     </TableRow>
                   ))

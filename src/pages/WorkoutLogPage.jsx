@@ -152,6 +152,7 @@ export default function WorkoutLogPage({ onBack }) {
                 today.setHours(23, 59, 59, 999); // End of today
                 return date > today;
               }}
+              reduceAnimations={true}
               slots={{
                 day: (props) => <CustomDay {...props} workoutDays={workoutDays} />,
               }}
