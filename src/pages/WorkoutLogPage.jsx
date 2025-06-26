@@ -66,7 +66,6 @@ export default function WorkoutLogPage({ onBack }) {
   // Fetch workout days for the current month of selectedDate
   useEffect(() => {
     async function fetchWorkoutDays() {
-      console.log("Fetching workout days for selectedDate:", selectedDate);
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
       const response = await fetch("/FitNotes_Backup.fitnotes");
       const arrayBuffer = await response.arrayBuffer();
@@ -74,16 +73,12 @@ export default function WorkoutLogPage({ onBack }) {
 
       // Get the month range for the currently selected date
       const [start, end] = getMonthRange(selectedDate);
-      console.log("Month range:", start, "to", end);
       const query = `SELECT DISTINCT date FROM training_log WHERE date >= ? AND date <= ? ORDER BY date`;
       const result = db.exec(query, [start, end]);
-      console.log("SQL result:", result);
       if (result.length > 0) {
         const days = result[0].values.map((row) => row[0]);
-        console.log("Setting workoutDays to:", days);
         setWorkoutDays(days);
       } else {
-        console.log("Setting workoutDays to empty array");
         setWorkoutDays([]);
       }
     }
@@ -120,6 +115,11 @@ export default function WorkoutLogPage({ onBack }) {
               value={parseISO(selectedDate)}
               onChange={handleDateChange}
               onMonthChange={handleMonthChange}
+              shouldDisableDate={(date) => {
+                const today = new Date();
+                today.setHours(23, 59, 59, 999); // End of today
+                return date > today;
+              }}
               slots={{
                 day: (props) => <CustomDay {...props} workoutDays={workoutDays} />,
               }}
