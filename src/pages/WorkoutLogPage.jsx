@@ -138,6 +138,23 @@ export default function WorkoutLogPage({ onBack }) {
           mt: 2,
         }}
       >
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<ArrowBack />}
+            onClick={onBack}
+            sx={{
+              bgcolor: "background.paper",
+              color: "text.primary",
+              "&:hover": {
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+              },
+            }}
+          >
+            Back to Home
+          </Button>
+        </Box>
         <Paper elevation={8} sx={{ bgcolor: "background.paper", p: 2 }}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <StaticDatePicker
@@ -187,22 +204,6 @@ export default function WorkoutLogPage({ onBack }) {
           width: "100%",
         }}
       >
-        <Button
-          variant="contained"
-          startIcon={<ArrowBack />}
-          onClick={onBack}
-          sx={{
-            m: 2,
-            bgcolor: "background.paper",
-            color: "text.primary",
-            "&:hover": {
-              bgcolor: "primary.main",
-              color: "primary.contrastText",
-            },
-          }}
-        >
-          Back to Home
-        </Button>
         <DailyLog selectedDate={selectedDate} onDateSelect={setSelectedDate} />
       </Box>
     </Container>

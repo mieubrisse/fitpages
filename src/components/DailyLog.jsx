@@ -135,12 +135,15 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           maxWidth: "lg",
           bgcolor: "background.paper",
           borderRadius: 4,
-          mt: 4,
+          my: 4,
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          flex: "1 1 auto",
         }}
       >
-        <Box sx={{ p: 4, pb: 2 }}>
-          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} mb={2}>
+        <Box sx={{ px: 2, pt: 2, pb: 0 }}>
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} mb={1}>
             <IconButton onClick={goToPrevDay} aria-label="Previous day" size="large">
               <ChevronLeft />
             </IconButton>
@@ -185,13 +188,19 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
             borderRadius: 4,
             overflow: "hidden",
             bgcolor: "background.paper",
+            flex: "1 1 auto",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <TableContainer
             component={Paper}
             sx={{
               bgcolor: "background.paper",
-              maxHeight: 400,
+              flex: "1 1 0",
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
               "& .MuiTable-root": {
                 bgcolor: "background.paper",
               },
