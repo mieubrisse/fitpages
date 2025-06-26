@@ -124,7 +124,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "flex-start",
-        background: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #1e3a8a 100%)",
+        bgcolor: "background.default",
         px: 1,
       }}
     >
@@ -133,10 +133,8 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
         sx={{
           width: "100%",
           maxWidth: "lg",
-          backgroundColor: "rgba(31, 41, 55, 0.9)",
-          backdropFilter: "blur(8px)",
+          bgcolor: "background.paper",
           borderRadius: 4,
-          border: "1px solid #1e3a8a",
           mt: 4,
           overflow: "hidden",
         }}
@@ -157,15 +155,10 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                 onClick={goToPrevDay}
                 aria-label="Previous day"
                 sx={{
-                  backgroundColor: "#3b82f6",
-                  color: "white",
+                  bgcolor: "primary.main",
+                  color: "primary.contrastText",
                   "&:hover": {
-                    backgroundColor: "#2563eb",
-                  },
-                  "&:focus": {
-                    outline: "none",
-                    ring: "2px",
-                    ringColor: "#60a5fa",
+                    bgcolor: "primary.dark",
                   },
                 }}
               >
@@ -184,20 +177,20 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                   px: 1,
                   py: 0.5,
                   borderRadius: "9999px",
-                  border: "2px solid #3b82f6",
+                  border: (theme) => `2px solid ${theme.palette.primary.main}`,
                   transition: "colors",
                   ...(isToday
                     ? {
-                        backgroundColor: "#3b82f6",
-                        color: "white",
+                        bgcolor: "primary.main",
+                        color: "primary.contrastText",
                         cursor: "default",
                       }
                     : {
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        color: "#1e3a8a",
+                        bgcolor: "background.paper",
+                        color: "primary.main",
                         "&:hover": {
-                          backgroundColor: "#3b82f6",
-                          color: "white",
+                          bgcolor: "primary.main",
+                          color: "primary.contrastText",
                         },
                         cursor: "pointer",
                       }),
@@ -210,17 +203,12 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                 aria-label="Next day"
                 disabled={isToday}
                 sx={{
-                  backgroundColor: "#3b82f6",
-                  color: "white",
+                  bgcolor: "primary.main",
+                  color: "primary.contrastText",
                   opacity: isToday ? 0.5 : 1,
                   cursor: isToday ? "not-allowed" : "pointer",
                   "&:hover": {
-                    backgroundColor: isToday ? "#3b82f6" : "#2563eb",
-                  },
-                  "&:focus": {
-                    outline: "none",
-                    ring: "2px",
-                    ringColor: "#60a5fa",
+                    bgcolor: isToday ? "primary.main" : "primary.dark",
                   },
                 }}
               >
@@ -231,9 +219,8 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
               variant="h4"
               sx={{
                 fontWeight: "bold",
-                color: "#93c5fd",
+                color: "text.primary",
                 mt: { xs: 1, sm: 0 },
-                textShadow: "0 1px 2px rgba(0, 0, 0, 0.5)",
               }}
             >
               Workouts for {selectedDate}
@@ -246,18 +233,16 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
             mb: 4,
             borderRadius: 4,
             overflow: "hidden",
-            border: "1px solid #1e3a8a",
-            backgroundColor: "rgba(17, 24, 39, 0.9)",
-            boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.3)",
+            bgcolor: "background.paper",
           }}
         >
           <TableContainer
             component={Paper}
             sx={{
-              backgroundColor: "transparent",
+              bgcolor: "background.paper",
               maxHeight: 400,
               "& .MuiTable-root": {
-                backgroundColor: "transparent",
+                bgcolor: "background.paper",
               },
             }}
           >
@@ -266,44 +251,40 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                 <TableRow>
                   <TableCell
                     sx={{
-                      backgroundColor: "#1e293b",
-                      color: "#93c5fd",
+                      bgcolor: "background.paper",
+                      color: "text.primary",
                       fontWeight: "bold",
                       textAlign: "center",
-                      borderBottom: "2px solid #1e3a8a",
                     }}
                   >
                     Exercise
                   </TableCell>
                   <TableCell
                     sx={{
-                      backgroundColor: "#1e293b",
-                      color: "#93c5fd",
+                      bgcolor: "background.paper",
+                      color: "text.primary",
                       fontWeight: "bold",
                       textAlign: "center",
-                      borderBottom: "2px solid #1e3a8a",
                     }}
                   >
                     Reps
                   </TableCell>
                   <TableCell
                     sx={{
-                      backgroundColor: "#1e293b",
-                      color: "#93c5fd",
+                      bgcolor: "background.paper",
+                      color: "text.primary",
                       fontWeight: "bold",
                       textAlign: "center",
-                      borderBottom: "2px solid #1e3a8a",
                     }}
                   >
                     Weight
                   </TableCell>
                   <TableCell
                     sx={{
-                      backgroundColor: "#1e293b",
-                      color: "#93c5fd",
+                      bgcolor: "background.paper",
+                      color: "text.primary",
                       fontWeight: "bold",
                       textAlign: "center",
-                      borderBottom: "2px solid #1e3a8a",
                     }}
                   >
                     Comment
@@ -317,7 +298,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                       colSpan={4}
                       sx={{
                         textAlign: "center",
-                        color: "#93c5fd",
+                        color: "text.secondary",
                         fontSize: "1.125rem",
                         borderBottom: "none",
                       }}
@@ -331,42 +312,38 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                       key={index}
                       sx={{
                         "&:hover": {
-                          backgroundColor: "rgba(59, 130, 246, 0.1)",
+                          backgroundColor: "action.hover",
                         },
                       }}
                     >
                       <TableCell
                         sx={{
-                          color: "#dbeafe",
+                          color: "text.primary",
                           textAlign: "center",
-                          borderBottom: "1px solid #1e3a8a",
                         }}
                       >
                         {row.exercise_name}
                       </TableCell>
                       <TableCell
                         sx={{
-                          color: "#dbeafe",
+                          color: "text.primary",
                           textAlign: "center",
-                          borderBottom: "1px solid #1e3a8a",
                         }}
                       >
                         {row.reps}
                       </TableCell>
                       <TableCell
                         sx={{
-                          color: "#dbeafe",
+                          color: "text.primary",
                           textAlign: "center",
-                          borderBottom: "1px solid #1e3a8a",
                         }}
                       >
                         {row.metric_weight}
                       </TableCell>
                       <TableCell
                         sx={{
-                          color: "#dbeafe",
+                          color: "text.primary",
                           textAlign: "center",
-                          borderBottom: "1px solid #1e3a8a",
                         }}
                       >
                         {row.comment}

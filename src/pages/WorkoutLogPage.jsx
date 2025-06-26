@@ -5,17 +5,21 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { format, parseISO } from "date-fns";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
-import { Box, Button, Container } from "@mui/material";
+import { Box, Button, Container, Paper } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
 import initSqlJs from "sql.js";
 
-// Create a dark theme
+// Create a Material-compliant dark theme
 const darkTheme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#3b82f6",
+      main: "#1976d2", // Material default blue
+    },
+    background: {
+      default: "#121212", // Material dark background
+      paper: "#1e1e1e", // Material dark surface
     },
   },
 });
@@ -47,10 +51,10 @@ function CustomDay({ workoutDays, ...props }) {
       {...props}
       sx={{
         ...(hasWorkout && {
-          backgroundColor: "#4b5563", // lighter gray for workout days
-          color: "white",
+          backgroundColor: (theme) => theme.palette.action.selected,
+          color: (theme) => theme.palette.text.primary,
           "&:hover": {
-            backgroundColor: "#6b7280",
+            backgroundColor: (theme) => theme.palette.action.hover,
           },
         }),
       }}
@@ -140,7 +144,7 @@ export default function WorkoutLogPage({ onBack }) {
           justifyContent: "center",
           width: "100%",
           minHeight: "100vh",
-          background: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #1e3a8a 100%)",
+          bgcolor: "background.default",
         }}
       >
         <Box
@@ -150,45 +154,47 @@ export default function WorkoutLogPage({ onBack }) {
             mt: 2,
           }}
         >
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <StaticDatePicker
-              displayStaticWrapperAs="desktop"
-              openTo="day"
-              value={parseISO(selectedDate)}
-              onChange={handleDateChange}
-              onMonthChange={handleMonthChange}
-              showDaysOutsideCurrentMonth={true}
-              shouldDisableDate={(date) => {
-                const today = new Date();
-                today.setHours(23, 59, 59, 999); // End of today
-                return date > today;
-              }}
-              slots={{
-                day: (props) => <CustomDay {...props} workoutDays={workoutDays} />,
-              }}
-              sx={{
-                backgroundColor: "#1f2937",
-                color: "white",
-                "& .MuiPickersDay-root": {
-                  color: "white",
-                  "&.Mui-selected": {
-                    backgroundColor: "#3b82f6",
-                    color: "white",
+          <Paper elevation={8} sx={{ bgcolor: "background.paper", p: 2 }}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <StaticDatePicker
+                displayStaticWrapperAs="desktop"
+                openTo="day"
+                value={parseISO(selectedDate)}
+                onChange={handleDateChange}
+                onMonthChange={handleMonthChange}
+                showDaysOutsideCurrentMonth={true}
+                shouldDisableDate={(date) => {
+                  const today = new Date();
+                  today.setHours(23, 59, 59, 999); // End of today
+                  return date > today;
+                }}
+                slots={{
+                  day: (props) => <CustomDay {...props} workoutDays={workoutDays} />,
+                }}
+                sx={{
+                  backgroundColor: "background.paper",
+                  color: "text.primary",
+                  "& .MuiPickersDay-root": {
+                    color: "text.primary",
+                    "&.Mui-selected": {
+                      backgroundColor: "primary.main",
+                      color: "primary.contrastText",
+                    },
+                    "&.MuiPickersDay-today": {
+                      borderColor: "primary.main",
+                    },
                   },
-                  "&.MuiPickersDay-today": {
-                    borderColor: "#3b82f6",
+                  "& .MuiPickersCalendarHeader-root": {
+                    color: "text.primary",
                   },
-                },
-                "& .MuiPickersCalendarHeader-root": {
-                  color: "white",
-                },
-                "& .MuiPickersDay-root.MuiPickersDay-dayOutsideMonth": {
-                  opacity: 0.3,
-                  color: "#9ca3af",
-                },
-              }}
-            />
-          </LocalizationProvider>
+                  "& .MuiPickersDay-root.MuiPickersDay-dayOutsideMonth": {
+                    opacity: 0.3,
+                    color: "text.secondary",
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Paper>
         </Box>
         <Box
           sx={{
@@ -202,10 +208,11 @@ export default function WorkoutLogPage({ onBack }) {
             onClick={onBack}
             sx={{
               m: 2,
-              backgroundColor: "#374151",
-              color: "white",
+              bgcolor: "background.paper",
+              color: "text.primary",
               "&:hover": {
-                backgroundColor: "#4b5563",
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
               },
             }}
           >
