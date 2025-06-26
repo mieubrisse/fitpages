@@ -5,7 +5,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { format, parseISO } from "date-fns";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
-import WorkoutLog from "../components/WorkoutLog";
+import DailyLog from "../components/DailyLog";
 import initSqlJs from "sql.js";
 
 // Create a dark theme
@@ -178,7 +178,7 @@ export default function WorkoutLogPage({ onBack }) {
           >
             ← Back to Home
           </button>
-          <WorkoutLog selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+          <DailyLog selectedDate={selectedDate} onDateSelect={setSelectedDate} />
         </div>
       </div>
     </ThemeProvider>
