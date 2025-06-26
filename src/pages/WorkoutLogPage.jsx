@@ -5,6 +5,8 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { format, parseISO } from "date-fns";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
+import { Box, Button, Container } from "@mui/material";
+import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
 import initSqlJs from "sql.js";
 
@@ -129,8 +131,25 @@ export default function WorkoutLogPage({ onBack }) {
 
   return (
     <ThemeProvider theme={darkTheme}>
-      <div className="flex flex-col md:flex-row items-start justify-center w-full">
-        <div className="md:mr-8 flex-shrink-0">
+      <Container
+        maxWidth="xl"
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          alignItems: "flex-start",
+          justifyContent: "center",
+          width: "100%",
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #111827 0%, #1f2937 50%, #1e3a8a 100%)",
+        }}
+      >
+        <Box
+          sx={{
+            mr: { md: 4 },
+            flexShrink: 0,
+            mt: 2,
+          }}
+        >
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <StaticDatePicker
               displayStaticWrapperAs="desktop"
@@ -170,17 +189,31 @@ export default function WorkoutLogPage({ onBack }) {
               }}
             />
           </LocalizationProvider>
-        </div>
-        <div className="flex-grow w-full">
-          <button
-            className="m-4 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+        </Box>
+        <Box
+          sx={{
+            flexGrow: 1,
+            width: "100%",
+          }}
+        >
+          <Button
+            variant="contained"
+            startIcon={<ArrowBack />}
             onClick={onBack}
+            sx={{
+              m: 2,
+              backgroundColor: "#374151",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "#4b5563",
+              },
+            }}
           >
-            ← Back to Home
-          </button>
+            Back to Home
+          </Button>
           <DailyLog selectedDate={selectedDate} onDateSelect={setSelectedDate} />
-        </div>
-      </div>
+        </Box>
+      </Container>
     </ThemeProvider>
   );
 }
