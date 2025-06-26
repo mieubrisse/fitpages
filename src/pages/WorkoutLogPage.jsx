@@ -26,10 +26,11 @@ function getMonthRange(dateStr) {
   return [formatDateLocal(first), formatDateLocal(last)];
 }
 
-// Custom day component that highlights workout days
-function CustomDay({ workoutDays, ...props }) {
+// Custom day component that highlights workout days and the selected day
+function CustomDay({ workoutDays, selectedDate, ...props }) {
   const dateStr = format(props.day, "yyyy-MM-dd");
   const hasWorkout = workoutDays.includes(dateStr);
+  const isSelected = dateStr === selectedDate;
 
   return (
     <PickersDay
@@ -42,6 +43,17 @@ function CustomDay({ workoutDays, ...props }) {
             backgroundColor: (theme) => theme.palette.action.hover,
           },
         }),
+        ...(isSelected && {
+          backgroundColor: (theme) => theme.palette.primary.main,
+          color: (theme) => theme.palette.primary.contrastText,
+          fontWeight: "bold",
+          borderRadius: "50%",
+          boxShadow: 3,
+          "&:hover": {
+            backgroundColor: (theme) => theme.palette.primary.dark,
+            color: (theme) => theme.palette.primary.contrastText,
+          },
+        }),
       }}
     />
   );
@@ -52,9 +64,13 @@ export default function WorkoutLogPage({ onBack }) {
     const d = new Date();
     return formatDateLocal(d);
   });
+  const [viewMonth, setViewMonth] = useState(() => {
+    const d = new Date();
+    return formatDateLocal(new Date(d.getFullYear(), d.getMonth(), 1)); // first of current month
+  });
   const [workoutDays, setWorkoutDays] = useState([]);
 
-  // Fetch workout days for the current month of selectedDate plus adjacent months
+  // Fetch workout days for the current viewMonth plus adjacent months
   useEffect(() => {
     async function fetchWorkoutDays() {
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
@@ -62,11 +78,11 @@ export default function WorkoutLogPage({ onBack }) {
       const arrayBuffer = await response.arrayBuffer();
       const db = new SQL.Database(new Uint8Array(arrayBuffer));
 
-      // Get the month range for the currently selected date
-      const [currentStart, currentEnd] = getMonthRange(selectedDate);
+      // Get the month range for the currently viewed month
+      const [currentStart, currentEnd] = getMonthRange(viewMonth);
 
       // Calculate previous month range
-      const [year, month] = selectedDate.split("-").map(Number);
+      const [year, month] = viewMonth.split("-").map(Number);
       const prevMonth = month === 1 ? 12 : month - 1;
       const prevYear = month === 1 ? year - 1 : year;
       const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, "0")}-01`;
@@ -97,7 +113,7 @@ export default function WorkoutLogPage({ onBack }) {
       }
     }
     fetchWorkoutDays();
-  }, [selectedDate]);
+  }, [viewMonth]);
 
   const handleDateChange = (newDate) => {
     if (newDate) {
@@ -107,14 +123,7 @@ export default function WorkoutLogPage({ onBack }) {
 
   const handleMonthChange = (newDate) => {
     if (newDate) {
-      const newMonthStr = format(newDate, "yyyy-MM");
-      const currentMonthStr = selectedDate.substring(0, 7); // Get YYYY-MM from selectedDate
-
-      // Only update selectedDate if we're actually changing to a different month
-      if (newMonthStr !== currentMonthStr) {
-        const firstDayOfMonth = format(newDate, "yyyy-MM-01");
-        setSelectedDate(firstDayOfMonth);
-      }
+      setViewMonth(formatDateLocal(new Date(newDate.getFullYear(), newDate.getMonth(), 1)));
     }
   };
 
@@ -159,8 +168,7 @@ export default function WorkoutLogPage({ onBack }) {
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <StaticDatePicker
               displayStaticWrapperAs="desktop"
-              openTo="day"
-              value={parseISO(selectedDate)}
+              defaultCalendarMonth={parseISO(selectedDate)}
               onChange={handleDateChange}
               onMonthChange={handleMonthChange}
               showDaysOutsideCurrentMonth={true}
@@ -171,7 +179,10 @@ export default function WorkoutLogPage({ onBack }) {
               }}
               reduceAnimations={true}
               slots={{
-                day: (props) => <CustomDay {...props} workoutDays={workoutDays} />,
+                day: (props) => (
+                  <CustomDay {...props} workoutDays={workoutDays} selectedDate={selectedDate} />
+                ),
+                actionBar: () => null,
               }}
               sx={{
                 backgroundColor: "background.paper",

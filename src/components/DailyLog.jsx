@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import initSqlJs from "sql.js";
+import { format, parseISO } from "date-fns";
 
 // Format a Date object as YYYY-MM-DD in local time
 function formatDateLocal(date) {
@@ -174,7 +175,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                 },
               }}
             >
-              {selectedDate}
+              {isToday ? "Today" : format(parseISO(selectedDate), "EEE, MMMM d")}
             </Button>
             <IconButton onClick={goToNextDay} aria-label="Next day" size="large" disabled={isToday}>
               <ChevronRight />
