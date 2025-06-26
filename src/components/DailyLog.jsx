@@ -12,6 +12,7 @@ import {
   Box,
   Typography,
   Container,
+  Stack,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import initSqlJs from "sql.js";
@@ -140,92 +141,20 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
         }}
       >
         <Box sx={{ p: 4, pb: 2 }}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: "center",
-              mb: 2,
-              gap: 2,
-              justifyContent: "space-between",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <IconButton
-                onClick={goToPrevDay}
-                aria-label="Previous day"
-                sx={{
-                  bgcolor: "primary.main",
-                  color: "primary.contrastText",
-                  "&:hover": {
-                    bgcolor: "primary.dark",
-                  },
-                }}
-              >
-                <ChevronLeft />
-              </IconButton>
-              <Button
-                onClick={() => {
-                  if (!isToday) onDateSelect(today);
-                }}
-                disabled={isToday}
-                title={isToday ? "Today" : "Go to today"}
-                sx={{
-                  fontSize: "1.25rem",
-                  fontWeight: "bold",
-                  mx: 1,
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: "9999px",
-                  border: (theme) => `2px solid ${theme.palette.primary.main}`,
-                  transition: "colors",
-                  ...(isToday
-                    ? {
-                        bgcolor: "primary.main",
-                        color: "primary.contrastText",
-                        cursor: "default",
-                      }
-                    : {
-                        bgcolor: "background.paper",
-                        color: "primary.main",
-                        "&:hover": {
-                          bgcolor: "primary.main",
-                          color: "primary.contrastText",
-                        },
-                        cursor: "pointer",
-                      }),
-                }}
-              >
-                {selectedDate}
-              </Button>
-              <IconButton
-                onClick={goToNextDay}
-                aria-label="Next day"
-                disabled={isToday}
-                sx={{
-                  bgcolor: "primary.main",
-                  color: "primary.contrastText",
-                  opacity: isToday ? 0.5 : 1,
-                  cursor: isToday ? "not-allowed" : "pointer",
-                  "&:hover": {
-                    bgcolor: isToday ? "primary.main" : "primary.dark",
-                  },
-                }}
-              >
-                <ChevronRight />
-              </IconButton>
-            </Box>
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} mb={2}>
+            <IconButton onClick={goToPrevDay} aria-label="Previous day" size="large">
+              <ChevronLeft />
+            </IconButton>
             <Typography
-              variant="h4"
-              sx={{
-                fontWeight: "bold",
-                color: "text.primary",
-                mt: { xs: 1, sm: 0 },
-              }}
+              variant="h6"
+              sx={{ minWidth: 120, textAlign: "center", fontWeight: "bold" }}
             >
-              Workouts for {selectedDate}
+              {selectedDate}
             </Typography>
-          </Box>
+            <IconButton onClick={goToNextDay} aria-label="Next day" size="large" disabled={isToday}>
+              <ChevronRight />
+            </IconButton>
+          </Stack>
         </Box>
         <Box
           sx={{

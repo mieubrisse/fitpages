@@ -3,26 +3,11 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { format, parseISO } from "date-fns";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import { Box, Button, Container, Paper } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
 import initSqlJs from "sql.js";
-
-// Create a Material-compliant dark theme
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: {
-      main: "#1976d2", // Material default blue
-    },
-    background: {
-      default: "#121212", // Material dark background
-      paper: "#1e1e1e", // Material dark surface
-    },
-  },
-});
 
 function formatDateLocal(date) {
   const year = date.getFullYear();
@@ -134,93 +119,91 @@ export default function WorkoutLogPage({ onBack }) {
   };
 
   return (
-    <ThemeProvider theme={darkTheme}>
-      <Container
-        maxWidth="xl"
+    <Container
+      maxWidth="xl"
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "column", md: "row" },
+        alignItems: "flex-start",
+        justifyContent: "center",
+        width: "100%",
+        minHeight: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
+      <Box
         sx={{
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          alignItems: "flex-start",
-          justifyContent: "center",
-          width: "100%",
-          minHeight: "100vh",
-          bgcolor: "background.default",
+          mr: { md: 4 },
+          flexShrink: 0,
+          mt: 2,
         }}
       >
-        <Box
-          sx={{
-            mr: { md: 4 },
-            flexShrink: 0,
-            mt: 2,
-          }}
-        >
-          <Paper elevation={8} sx={{ bgcolor: "background.paper", p: 2 }}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <StaticDatePicker
-                displayStaticWrapperAs="desktop"
-                openTo="day"
-                value={parseISO(selectedDate)}
-                onChange={handleDateChange}
-                onMonthChange={handleMonthChange}
-                showDaysOutsideCurrentMonth={true}
-                shouldDisableDate={(date) => {
-                  const today = new Date();
-                  today.setHours(23, 59, 59, 999); // End of today
-                  return date > today;
-                }}
-                slots={{
-                  day: (props) => <CustomDay {...props} workoutDays={workoutDays} />,
-                }}
-                sx={{
-                  backgroundColor: "background.paper",
+        <Paper elevation={8} sx={{ bgcolor: "background.paper", p: 2 }}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <StaticDatePicker
+              displayStaticWrapperAs="desktop"
+              openTo="day"
+              value={parseISO(selectedDate)}
+              onChange={handleDateChange}
+              onMonthChange={handleMonthChange}
+              showDaysOutsideCurrentMonth={true}
+              shouldDisableDate={(date) => {
+                const today = new Date();
+                today.setHours(23, 59, 59, 999); // End of today
+                return date > today;
+              }}
+              slots={{
+                day: (props) => <CustomDay {...props} workoutDays={workoutDays} />,
+              }}
+              sx={{
+                backgroundColor: "background.paper",
+                color: "text.primary",
+                "& .MuiPickersDay-root": {
                   color: "text.primary",
-                  "& .MuiPickersDay-root": {
-                    color: "text.primary",
-                    "&.Mui-selected": {
-                      backgroundColor: "primary.main",
-                      color: "primary.contrastText",
-                    },
-                    "&.MuiPickersDay-today": {
-                      borderColor: "primary.main",
-                    },
+                  "&.Mui-selected": {
+                    backgroundColor: "primary.main",
+                    color: "primary.contrastText",
                   },
-                  "& .MuiPickersCalendarHeader-root": {
-                    color: "text.primary",
+                  "&.MuiPickersDay-today": {
+                    borderColor: "primary.main",
                   },
-                  "& .MuiPickersDay-root.MuiPickersDay-dayOutsideMonth": {
-                    opacity: 0.3,
-                    color: "text.secondary",
-                  },
-                }}
-              />
-            </LocalizationProvider>
-          </Paper>
-        </Box>
-        <Box
+                },
+                "& .MuiPickersCalendarHeader-root": {
+                  color: "text.primary",
+                },
+                "& .MuiPickersDay-root.MuiPickersDay-dayOutsideMonth": {
+                  opacity: 0.3,
+                  color: "text.secondary",
+                },
+              }}
+            />
+          </LocalizationProvider>
+        </Paper>
+      </Box>
+      <Box
+        sx={{
+          flexGrow: 1,
+          width: "100%",
+        }}
+      >
+        <Button
+          variant="contained"
+          startIcon={<ArrowBack />}
+          onClick={onBack}
           sx={{
-            flexGrow: 1,
-            width: "100%",
+            m: 2,
+            bgcolor: "background.paper",
+            color: "text.primary",
+            "&:hover": {
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
+            },
           }}
         >
-          <Button
-            variant="contained"
-            startIcon={<ArrowBack />}
-            onClick={onBack}
-            sx={{
-              m: 2,
-              bgcolor: "background.paper",
-              color: "text.primary",
-              "&:hover": {
-                bgcolor: "primary.main",
-                color: "primary.contrastText",
-              },
-            }}
-          >
-            Back to Home
-          </Button>
-          <DailyLog selectedDate={selectedDate} onDateSelect={setSelectedDate} />
-        </Box>
-      </Container>
-    </ThemeProvider>
+          Back to Home
+        </Button>
+        <DailyLog selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+      </Box>
+    </Container>
   );
 }

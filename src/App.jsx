@@ -1,7 +1,14 @@
 import { useState } from "react";
 import DatabaseViewer from "./components/DatabaseViewer";
 import WorkoutLogPage from "./pages/WorkoutLogPage";
-import "./App.css";
+import { Container, Box, Button, Paper, Stack } from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+
+const theme = createTheme({
+  palette: {
+    mode: "dark",
+  },
+});
 
 function App() {
   const [screen, setScreen] = useState("home");
@@ -51,38 +58,96 @@ function App() {
   */
 
   return (
-    <div className="App min-h-screen bg-gray-900">
-      <main className="bg-gray-900">
-        {screen === "home" && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-            <button
-              className="px-8 py-4 bg-blue-600 text-white rounded-lg text-2xl font-semibold shadow hover:bg-blue-500 transition-colors"
-              onClick={() => setScreen("explorer")}
-            >
-              Table Explorer
-            </button>
-            <button
-              className="px-8 py-4 bg-purple-600 text-white rounded-lg text-2xl font-semibold shadow hover:bg-purple-500 transition-colors"
-              onClick={() => setScreen("workoutLogNew")}
-            >
-              Workout Log
-            </button>
-          </div>
-        )}
-        {screen === "explorer" && (
-          <div>
-            <button
-              className="m-4 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
-              onClick={() => setScreen("home")}
-            >
-              ← Back to Home
-            </button>
-            <DatabaseViewer />
-          </div>
-        )}
-        {screen === "workoutLogNew" && <WorkoutLogPage onBack={() => setScreen("home")} />}
-      </main>
-    </div>
+    <ThemeProvider theme={theme}>
+      {screen === "home" || screen === "explorer" ? (
+        <Container
+          maxWidth={false}
+          disableGutters
+          sx={{
+            bgcolor: "background.default",
+            minHeight: "100vh",
+            width: "100vw",
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Paper
+            elevation={8}
+            sx={{
+              p: 4,
+              borderRadius: 4,
+              bgcolor: "background.paper",
+              minWidth: 350,
+              width: "100%",
+              maxWidth: 500,
+            }}
+          >
+            {screen === "home" && (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: 300,
+                }}
+              >
+                <Stack spacing={4} width="100%" alignItems="center">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="large"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "1.5rem",
+                      px: 6,
+                      py: 2,
+                      borderRadius: 2,
+                      boxShadow: 3,
+                    }}
+                    onClick={() => setScreen("explorer")}
+                  >
+                    Table Explorer
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    size="large"
+                    sx={{
+                      fontWeight: "bold",
+                      fontSize: "1.5rem",
+                      px: 6,
+                      py: 2,
+                      borderRadius: 2,
+                      boxShadow: 3,
+                    }}
+                    onClick={() => setScreen("workoutLogNew")}
+                  >
+                    Workout Log
+                  </Button>
+                </Stack>
+              </Box>
+            )}
+            {screen === "explorer" && (
+              <Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ m: 2, borderRadius: 2 }}
+                  onClick={() => setScreen("home")}
+                >
+                  ← Back to Home
+                </Button>
+                <DatabaseViewer />
+              </Box>
+            )}
+          </Paper>
+        </Container>
+      ) : null}
+      {screen === "workoutLogNew" && <WorkoutLogPage onBack={() => setScreen("home")} />}
+    </ThemeProvider>
   );
 }
 
