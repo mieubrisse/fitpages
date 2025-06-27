@@ -251,6 +251,7 @@ export default function WorkoutLogPage({ onBack }) {
               }}
               reduceAnimations={true}
               slots={{
+                toolbar: () => null,
                 day: (props) => (
                   <CustomDay {...props} workoutDays={workoutDays} selectedDate={selectedDate} />
                 ),

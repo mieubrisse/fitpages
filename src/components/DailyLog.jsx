@@ -189,51 +189,25 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
         }}
       >
         <Box sx={{ px: 3, pt: 3, pb: 0, flexShrink: 0, borderBottom: 1, borderColor: "divider" }}>
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: "bold",
-              letterSpacing: 1,
-              mb: 1,
-              textAlign: "center",
-              color: "text.primary",
-            }}
-          >
-            {isToday ? "Today" : format(parseISO(selectedDate), "EEE, MMMM d, yyyy")}
-          </Typography>
-          <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} mb={1}>
+          <Stack direction="row" alignItems="center" justifyContent="center" spacing={2} mb={1}>
             <IconButton onClick={goToPrevDay} aria-label="Previous day" size="large">
               <ChevronLeft />
             </IconButton>
-            <Button
-              variant="text"
-              disableRipple
-              disabled={isToday}
-              onClick={() => !isToday && onDateSelect(today)}
+            <Typography
+              variant="h4"
               sx={{
-                minWidth: 120,
-                fontWeight: "normal",
-                fontSize: "1.25rem",
-                textTransform: "none",
+                fontWeight: "bold",
+                letterSpacing: 1,
+                textAlign: "center",
                 color: "text.primary",
-                backgroundColor: "transparent",
-                cursor: isToday ? "default" : "pointer",
-                transition: "background 0.2s, color 0.2s",
-                "&:hover": !isToday
-                  ? {
-                      backgroundColor: "primary.main",
-                      color: "primary.contrastText",
-                    }
-                  : {},
-                "&.Mui-disabled": {
-                  color: "text.primary",
-                  backgroundColor: "transparent",
-                  opacity: 1,
-                },
+                width: 220,
+                minWidth: 220,
+                maxWidth: 220,
+                display: "inline-block",
               }}
             >
-              {isToday ? "Today" : format(parseISO(selectedDate), "EEE, MMMM d")}
-            </Button>
+              {isToday ? "Today" : format(parseISO(selectedDate), "EEE, MMM d")}
+            </Typography>
             <IconButton onClick={goToNextDay} aria-label="Next day" size="large" disabled={isToday}>
               <ChevronRight />
             </IconButton>
