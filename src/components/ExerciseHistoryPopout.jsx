@@ -1,0 +1,297 @@
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Divider,
+} from "@mui/material";
+import { KeyboardArrowRight } from "@mui/icons-material";
+import { format, parseISO } from "date-fns";
+
+export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
+  const [exerciseHistory, setExerciseHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    if (!exerciseName || !db) return;
+
+    setLoading(true);
+    try {
+      const query = `
+        SELECT 
+          t.date,
+          t.reps,
+          t.metric_weight,
+          c.comment AS comment,
+          t._id
+        FROM training_log t
+        LEFT JOIN exercise e ON t.exercise_id = e._id
+        LEFT JOIN Comment c ON c.owner_id = t._id
+        WHERE e.name = ?
+        ORDER BY t.date DESC, t._id ASC;
+      `;
+      const result = db.exec(query, [exerciseName]);
+
+      if (result.length > 0) {
+        const data = result[0].values.map((row) => ({
+          date: row[0],
+          reps: row[1],
+          metric_weight: row[2],
+          comment: row[3] ?? "",
+          id: row[4],
+        }));
+
+        // Group by date
+        const groupedData = data.reduce((acc, item) => {
+          if (!acc[item.date]) {
+            acc[item.date] = [];
+          }
+          acc[item.date].push(item);
+          return acc;
+        }, {});
+
+        // Convert to array and sort by date (newest first)
+        // Items within each day are already sorted by _id ASC (chronological)
+        const sortedData = Object.entries(groupedData)
+          .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA))
+          .map(([date, items]) => ({ date, items }));
+
+        setExerciseHistory(sortedData);
+      } else {
+        setExerciseHistory([]);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching exercise history:", err);
+      setExerciseHistory([]);
+      setLoading(false);
+    }
+  }, [exerciseName, db]);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Match the animation duration
+  };
+
+  if (!exerciseName) return null;
+
+  return (
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        right: 0,
+        width: "50vw",
+        height: "100vh",
+        zIndex: 1300,
+        animation: isClosing ? "slideOut 0.3s ease-in forwards" : "slideIn 0.3s ease-out",
+        "@keyframes slideIn": {
+          from: {
+            transform: "translateX(100%)",
+          },
+          to: {
+            transform: "translateX(0)",
+          },
+        },
+        "@keyframes slideOut": {
+          from: {
+            transform: "translateX(0)",
+          },
+          to: {
+            transform: "translateX(100%)",
+          },
+        },
+      }}
+    >
+      <Paper
+        elevation={24}
+        sx={{
+          height: "100%",
+          bgcolor: "background.paper",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            p: 3,
+            borderBottom: 1,
+            borderColor: "divider",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <IconButton
+            onClick={handleClose}
+            size="large"
+            sx={{
+              color: "text.secondary",
+              "&:hover": {
+                color: "text.primary",
+                bgcolor: "action.hover",
+              },
+            }}
+          >
+            <KeyboardArrowRight />
+          </IconButton>
+          <Typography
+            variant="h5"
+            component="h2"
+            sx={{ fontWeight: "bold", flex: 1, textAlign: "center" }}
+          >
+            {exerciseName}
+          </Typography>
+          <Box sx={{ width: 48 }} /> {/* Spacer to balance the close button */}
+        </Box>
+
+        {/* Content */}
+        <Box
+          sx={{
+            flex: 1,
+            overflow: "auto",
+            p: 3,
+          }}
+        >
+          {loading ? (
+            <Typography variant="body1" color="text.secondary">
+              Loading exercise history...
+            </Typography>
+          ) : exerciseHistory.length === 0 ? (
+            <Typography variant="body1" color="text.secondary">
+              No history found for this exercise.
+            </Typography>
+          ) : (
+            exerciseHistory.map(({ date, items }, index) => (
+              <Box key={date} sx={{ mb: 4 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontWeight: "bold",
+                    color: "text.primary",
+                  }}
+                >
+                  {format(parseISO(date), "EEE, MMMM d, yyyy")}
+                </Typography>
+
+                <TableContainer
+                  component={Paper}
+                  sx={{
+                    bgcolor: "background.default",
+                    mb: 2,
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: "grey.900" }}>
+                        <TableCell
+                          sx={{
+                            bgcolor: "grey.900",
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: "15%",
+                          }}
+                        >
+                          Set
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            bgcolor: "grey.900",
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: "20%",
+                          }}
+                        >
+                          Weight
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            bgcolor: "grey.900",
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: "15%",
+                          }}
+                        >
+                          Reps
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            bgcolor: "grey.900",
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: "50%",
+                          }}
+                        >
+                          Comment
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {items.map((item, itemIndex) => (
+                        <TableRow key={itemIndex}>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              color: "text.primary",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {itemIndex + 1}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              color: "text.primary",
+                            }}
+                          >
+                            {item.metric_weight} kg
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              color: "text.primary",
+                            }}
+                          >
+                            {item.reps}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              color: "text.primary",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {item.comment || ""}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                {index < exerciseHistory.length - 1 && <Divider sx={{ my: 2 }} />}
+              </Box>
+            ))
+          )}
+        </Box>
+      </Paper>
+    </Box>
+  );
+}

@@ -12,10 +12,12 @@ import {
   Box,
   Container,
   Stack,
+  Typography,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import initSqlJs from "sql.js";
 import { format, parseISO } from "date-fns";
+import ExerciseHistoryPopout from "./ExerciseHistoryPopout";
 
 // Format a Date object as YYYY-MM-DD in local time
 function formatDateLocal(date) {
@@ -35,6 +37,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [db, setDb] = useState(null);
+  const [selectedExercise, setSelectedExercise] = useState(null);
 
   // Load DB only once
   useEffect(() => {
@@ -66,12 +69,13 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           e.name AS exercise_name,
           t.reps,
           t.metric_weight,
-          c.comment AS comment
+          c.comment AS comment,
+          t._id
         FROM training_log t
         LEFT JOIN exercise e ON t.exercise_id = e._id
         LEFT JOIN Comment c ON c.owner_id = t._id
         WHERE t.date = ?
-        ORDER BY t.date DESC;
+        ORDER BY t._id ASC;
       `;
       const result = db.exec(query, [selectedDate]);
       if (result.length > 0) {
@@ -82,9 +86,37 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
             reps: row[2],
             metric_weight: row[3],
             comment: row[4] ?? "",
+            id: row[5],
           };
         });
-        setRows(data);
+
+        // Track first appearance of each exercise
+        const exerciseFirstAppearance = new Map();
+        data.forEach((item, index) => {
+          if (!exerciseFirstAppearance.has(item.exercise_name)) {
+            exerciseFirstAppearance.set(item.exercise_name, index);
+          }
+        });
+
+        // Group by exercise name
+        const groupedData = data.reduce((acc, item) => {
+          if (!acc[item.exercise_name]) {
+            acc[item.exercise_name] = [];
+          }
+          acc[item.exercise_name].push(item);
+          return acc;
+        }, {});
+
+        // Convert to array and sort by first appearance order
+        const sortedData = Object.entries(groupedData)
+          .sort(([exerciseA], [exerciseB]) => {
+            const firstA = exerciseFirstAppearance.get(exerciseA);
+            const firstB = exerciseFirstAppearance.get(exerciseB);
+            return firstA - firstB;
+          })
+          .map(([exerciseName, items]) => ({ exerciseName, items }));
+
+        setRows(sortedData);
       } else {
         setRows([]);
       }
@@ -109,6 +141,14 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
   const today = formatDateLocal(new Date());
   const isToday = selectedDate === today;
 
+  const handleExerciseClick = (exerciseName) => {
+    setSelectedExercise(exerciseName);
+  };
+
+  const handleCloseExercise = () => {
+    setSelectedExercise(null);
+  };
+
   if (loading) {
     return <Box sx={{ p: 2, color: "grey.300" }}>Loading workout log...</Box>;
   }
@@ -120,7 +160,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
     <Container
       maxWidth="lg"
       sx={{
-        minHeight: "100vh",
+        height: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -130,7 +170,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
       }}
     >
       <Paper
-        elevation={8}
+        elevation={24}
         sx={{
           width: "100%",
           maxWidth: "lg",
@@ -141,9 +181,10 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           display: "flex",
           flexDirection: "column",
           flex: "1 1 auto",
+          maxHeight: "calc(100vh - 64px)", // Account for top/bottom margins
         }}
       >
-        <Box sx={{ px: 2, pt: 2, pb: 0 }}>
+        <Box sx={{ px: 3, pt: 3, pb: 0, flexShrink: 0, borderBottom: 1, borderColor: "divider" }}>
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} mb={1}>
             <IconButton onClick={goToPrevDay} aria-label="Previous day" size="large">
               <ChevronLeft />
@@ -184,164 +225,155 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
         </Box>
         <Box
           sx={{
-            mx: 4,
-            mb: 4,
-            borderRadius: 4,
-            overflow: "hidden",
-            bgcolor: "background.paper",
-            flex: "1 1 auto",
-            display: "flex",
-            flexDirection: "column",
+            flex: 1,
+            overflow: "auto",
+            p: 3,
+            minHeight: 0, // Important for flex child to shrink
           }}
         >
-          <TableContainer
-            component={Paper}
-            sx={{
-              bgcolor: "background.paper",
-              flex: "1 1 0",
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-              "& .MuiTable-root": {
-                bgcolor: "background.paper",
-              },
-            }}
-          >
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow sx={{ bgcolor: "grey.900" }}>
-                  <TableCell
-                    sx={{
-                      bgcolor: "grey.900",
-                      color: "text.primary",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      width: "40%",
-                      maxWidth: 0,
-                      borderRight: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    Exercise
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      bgcolor: "grey.900",
-                      color: "text.primary",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      width: "10%",
-                      maxWidth: 0,
-                      borderRight: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    Reps
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      bgcolor: "grey.900",
-                      color: "text.primary",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      width: "10%",
-                      maxWidth: 0,
-                      borderRight: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  >
-                    Weight
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      bgcolor: "grey.900",
-                      color: "text.primary",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      width: "40%",
-                      maxWidth: 0,
-                    }}
-                  >
-                    Comment
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      sx={{
-                        textAlign: "center",
-                        color: "text.secondary",
-                        fontSize: "1.125rem",
-                        borderBottom: "none",
-                      }}
-                    >
-                      No data
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  rows.map((row, index) => (
-                    <TableRow key={index}>
-                      <TableCell
-                        sx={{
-                          color: "text.primary",
-                          textAlign: "center",
-                          width: "40%",
-                          maxWidth: 0,
-                          borderRight: "1px solid",
-                          borderColor: "divider",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {row.exercise_name}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: "text.primary",
-                          textAlign: "center",
-                          width: "10%",
-                          maxWidth: 0,
-                          borderRight: "1px solid",
-                          borderColor: "divider",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {row.reps}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: "text.primary",
-                          textAlign: "center",
-                          width: "10%",
-                          maxWidth: 0,
-                          borderRight: "1px solid",
-                          borderColor: "divider",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {row.metric_weight} kg
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          color: "text.primary",
-                          textAlign: "center",
-                          width: "40%",
-                          maxWidth: 0,
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {row.comment ? row.comment : ""}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          {rows.length === 0 ? (
+            <Box
+              sx={{
+                textAlign: "center",
+                color: "text.secondary",
+                fontSize: "1.125rem",
+                py: 4,
+              }}
+            >
+              No data
+            </Box>
+          ) : (
+            rows.map(({ exerciseName, items }) => (
+              <Box key={exerciseName} sx={{ mb: 4 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: 2,
+                    fontWeight: "bold",
+                    color: "text.primary",
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "primary.main",
+                      textDecoration: "underline",
+                    },
+                  }}
+                  onClick={() => handleExerciseClick(exerciseName)}
+                >
+                  {exerciseName}
+                </Typography>
+
+                <TableContainer
+                  component={Paper}
+                  sx={{
+                    bgcolor: "background.default",
+                    mb: 2,
+                  }}
+                >
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: "grey.900" }}>
+                        <TableCell
+                          sx={{
+                            bgcolor: "grey.900",
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: "15%",
+                          }}
+                        >
+                          Set
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            bgcolor: "grey.900",
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: "20%",
+                          }}
+                        >
+                          Weight
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            bgcolor: "grey.900",
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: "15%",
+                          }}
+                        >
+                          Reps
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            bgcolor: "grey.900",
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: "50%",
+                          }}
+                        >
+                          Comment
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {items.map((item, itemIndex) => (
+                        <TableRow key={itemIndex}>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              color: "text.primary",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {itemIndex + 1}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              color: "text.primary",
+                            }}
+                          >
+                            {item.metric_weight} kg
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              color: "text.primary",
+                            }}
+                          >
+                            {item.reps}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              color: "text.primary",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {item.comment || ""}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            ))
+          )}
         </Box>
       </Paper>
+
+      {/* Exercise History Popout */}
+      {selectedExercise && (
+        <ExerciseHistoryPopout
+          exerciseName={selectedExercise}
+          onClose={handleCloseExercise}
+          db={db}
+        />
+      )}
     </Container>
   );
 }
