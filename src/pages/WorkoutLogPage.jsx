@@ -16,16 +16,6 @@ function formatDateLocal(date) {
   return `${year}-${month}-${day}`;
 }
 
-function getMonthRange(dateStr) {
-  // Parse the date string explicitly to avoid timezone issues
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day); // month - 1 because getMonth() is 0-indexed
-  const monthIndex = date.getMonth(); // 0-indexed: 0=Jan, 1=Feb, ..., 5=Jun, etc.
-  const first = new Date(year, monthIndex, 1);
-  const last = new Date(year, monthIndex + 1, 0);
-  return [formatDateLocal(first), formatDateLocal(last)];
-}
-
 // Custom day component that highlights workout days and the selected day
 function CustomDay({ workoutDays, selectedDate, ...props }) {
   const dateStr = format(props.day, "yyyy-MM-dd");
@@ -64,13 +54,13 @@ export default function WorkoutLogPage({ onBack }) {
     const d = new Date();
     return formatDateLocal(d);
   });
-  const [viewMonth, setViewMonth] = useState(() => {
+  const [calendarMonth, setCalendarMonth] = useState(() => {
     const d = new Date();
-    return formatDateLocal(new Date(d.getFullYear(), d.getMonth(), 1)); // first of current month
+    return parseISO(formatDateLocal(new Date(d.getFullYear(), d.getMonth(), 1)));
   });
   const [workoutDays, setWorkoutDays] = useState([]);
 
-  // Fetch workout days for the current viewMonth plus adjacent months
+  // Fetch workout days for the past 6 months
   useEffect(() => {
     async function fetchWorkoutDays() {
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
@@ -78,32 +68,15 @@ export default function WorkoutLogPage({ onBack }) {
       const arrayBuffer = await response.arrayBuffer();
       const db = new SQL.Database(new Uint8Array(arrayBuffer));
 
-      // Get the month range for the currently viewed month
-      const [currentStart, currentEnd] = getMonthRange(viewMonth);
+      // Calculate 6 months ago from today
+      const today = new Date();
+      const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+      const startDate = formatDateLocal(sixMonthsAgo);
+      const endDate = formatDateLocal(today);
 
-      // Calculate previous month range
-      const [year, month] = viewMonth.split("-").map(Number);
-      const prevMonth = month === 1 ? 12 : month - 1;
-      const prevYear = month === 1 ? year - 1 : year;
-      const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, "0")}-01`;
-      const [prevStart, prevEnd] = getMonthRange(prevMonthStr);
-
-      // Calculate next month range
-      const nextMonth = month === 12 ? 1 : month + 1;
-      const nextYear = month === 12 ? year + 1 : year;
-      const nextMonthStr = `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`;
-      const [nextStart, nextEnd] = getMonthRange(nextMonthStr);
-
-      // Query for all three months
-      const query = `SELECT DISTINCT date FROM training_log WHERE (date >= ? AND date <= ?) OR (date >= ? AND date <= ?) OR (date >= ? AND date <= ?) ORDER BY date`;
-      const result = db.exec(query, [
-        prevStart,
-        prevEnd,
-        currentStart,
-        currentEnd,
-        nextStart,
-        nextEnd,
-      ]);
+      // Query for the past 6 months
+      const query = `SELECT DISTINCT date FROM training_log WHERE date >= ? AND date <= ? ORDER BY date`;
+      const result = db.exec(query, [startDate, endDate]);
 
       if (result.length > 0) {
         const days = result[0].values.map((row) => row[0]);
@@ -113,18 +86,29 @@ export default function WorkoutLogPage({ onBack }) {
       }
     }
     fetchWorkoutDays();
-  }, [viewMonth]);
+  }, []); // Only run once on mount
 
   const handleDateChange = (newDate) => {
     if (newDate) {
       setSelectedDate(format(newDate, "yyyy-MM-dd"));
+      // Update calendar month to show the month of the selected date
+      setCalendarMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
     }
   };
 
   const handleMonthChange = (newDate) => {
+    console.log("On month change: " + newDate);
     if (newDate) {
-      setViewMonth(formatDateLocal(new Date(newDate.getFullYear(), newDate.getMonth(), 1)));
+      console.log("Actually changing month");
+      setCalendarMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
     }
+  };
+
+  const handleDateSelect = (newDateStr) => {
+    setSelectedDate(newDateStr);
+    // Update calendar month to show the month of the selected date
+    const [year, month] = newDateStr.split("-").map(Number);
+    setCalendarMonth(new Date(year, month - 1, 1));
   };
 
   return (
@@ -168,7 +152,8 @@ export default function WorkoutLogPage({ onBack }) {
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <StaticDatePicker
               displayStaticWrapperAs="desktop"
-              defaultCalendarMonth={parseISO(selectedDate)}
+              calendarMonth={calendarMonth}
+              value={parseISO(selectedDate)}
               onChange={handleDateChange}
               onMonthChange={handleMonthChange}
               showDaysOutsideCurrentMonth={true}
@@ -215,7 +200,7 @@ export default function WorkoutLogPage({ onBack }) {
           width: "100%",
         }}
       >
-        <DailyLog selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+        <DailyLog selectedDate={selectedDate} onDateSelect={handleDateSelect} />
       </Box>
     </Container>
   );

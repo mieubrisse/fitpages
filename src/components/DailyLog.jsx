@@ -131,12 +131,14 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
   const goToPrevDay = () => {
     const prev = parseDateLocal(selectedDate);
     prev.setDate(prev.getDate() - 1);
-    onDateSelect(formatDateLocal(prev));
+    const newDate = formatDateLocal(prev);
+    onDateSelect(newDate);
   };
   const goToNextDay = () => {
     const next = parseDateLocal(selectedDate);
     next.setDate(next.getDate() + 1);
-    onDateSelect(formatDateLocal(next));
+    const newDate = formatDateLocal(next);
+    onDateSelect(newDate);
   };
   const today = formatDateLocal(new Date());
   const isToday = selectedDate === today;
@@ -227,7 +229,8 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           sx={{
             flex: 1,
             overflow: "auto",
-            p: 3,
+            px: 6,
+            py: 3,
             minHeight: 0, // Important for flex child to shrink
           }}
         >
