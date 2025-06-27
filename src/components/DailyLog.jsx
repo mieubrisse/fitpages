@@ -162,13 +162,14 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
     <Container
       maxWidth="lg"
       sx={{
-        height: "100vh",
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "flex-start",
         bgcolor: "background.default",
         px: 1,
+        minHeight: 0,
       }}
     >
       <Paper
@@ -178,15 +179,28 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           maxWidth: "lg",
           bgcolor: "background.paper",
           borderRadius: 4,
-          my: 4,
+          my: 3,
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
           flex: "1 1 auto",
-          maxHeight: "calc(100vh - 64px)", // Account for top/bottom margins
+          height: "100%",
+          minHeight: 0,
         }}
       >
         <Box sx={{ px: 3, pt: 3, pb: 0, flexShrink: 0, borderBottom: 1, borderColor: "divider" }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: "bold",
+              letterSpacing: 1,
+              mb: 1,
+              textAlign: "center",
+              color: "text.primary",
+            }}
+          >
+            {isToday ? "Today" : format(parseISO(selectedDate), "EEE, MMMM d, yyyy")}
+          </Typography>
           <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} mb={1}>
             <IconButton onClick={goToPrevDay} aria-label="Previous day" size="large">
               <ChevronLeft />

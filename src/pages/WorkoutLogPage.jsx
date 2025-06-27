@@ -177,7 +177,8 @@ export default function WorkoutLogPage({ onBack }) {
         alignItems: "stretch",
         justifyContent: "flex-start",
         width: "100%",
-        minHeight: "100vh",
+        height: "100vh",
+        minHeight: 0,
         bgcolor: "background.default",
         p: 0,
       }}
@@ -225,6 +226,8 @@ export default function WorkoutLogPage({ onBack }) {
           justifyContent: "center",
           width: "100%",
           flex: 1,
+          minHeight: 0,
+          height: "100%",
         }}
       >
         <Box
@@ -281,13 +284,29 @@ export default function WorkoutLogPage({ onBack }) {
           sx={{
             flexGrow: 1,
             width: "100%",
+            height: "100%",
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           <Paper
             elevation={24}
-            sx={{ bgcolor: "background.paper", borderRadius: 4, mt: 1, p: 0, boxShadow: 8 }}
+            sx={{
+              bgcolor: "background.paper",
+              borderRadius: 4,
+              mt: 1,
+              p: 0,
+              boxShadow: 8,
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              minHeight: 0,
+            }}
           >
-            <DailyLog selectedDate={selectedDate} onDateSelect={handleDateSelect} />
+            <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+              <DailyLog selectedDate={selectedDate} onDateSelect={handleDateSelect} />
+            </Box>
           </Paper>
         </Box>
         {/* Exercise History Popout */}
