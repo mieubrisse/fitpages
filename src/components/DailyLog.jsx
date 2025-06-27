@@ -179,7 +179,6 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           maxWidth: "lg",
           bgcolor: "background.paper",
           borderRadius: 4,
-          my: 3,
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
