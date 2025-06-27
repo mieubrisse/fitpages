@@ -193,15 +193,13 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
               <ChevronLeft />
             </IconButton>
             <Typography
-              variant="h4"
+              variant="h3"
               sx={{
-                fontWeight: "bold",
-                letterSpacing: 1,
                 textAlign: "center",
                 color: "text.primary",
-                width: 220,
-                minWidth: 220,
-                maxWidth: 220,
+                width: 320,
+                minWidth: 320,
+                maxWidth: 320,
                 display: "inline-block",
               }}
             >
@@ -225,12 +223,12 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
             <Box
               sx={{
                 textAlign: "center",
-                color: "text.secondary",
-                fontSize: "1.125rem",
                 py: 4,
               }}
             >
-              No data
+              <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1.6875rem" }}>
+                No data
+              </Typography>
             </Box>
           ) : (
             rows.map(({ exerciseName, items }) => (
@@ -255,16 +253,12 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                 >
                   {exerciseName}
                 </Typography>
-                <TableContainer
-                  component={Box}
-                  sx={{ bgcolor: "background.default", mb: 2, borderRadius: 2 }}
-                >
+                <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2 }}>
                   <Table size="small">
                     <TableHead>
-                      <TableRow sx={{ bgcolor: "grey.900" }}>
+                      <TableRow>
                         <TableCell
                           sx={{
-                            bgcolor: "grey.900",
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
@@ -275,7 +269,6 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                         </TableCell>
                         <TableCell
                           sx={{
-                            bgcolor: "grey.900",
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
@@ -286,7 +279,6 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                         </TableCell>
                         <TableCell
                           sx={{
-                            bgcolor: "grey.900",
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
@@ -297,7 +289,6 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                         </TableCell>
                         <TableCell
                           sx={{
-                            bgcolor: "grey.900",
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",

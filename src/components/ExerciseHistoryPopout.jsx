@@ -147,11 +147,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
           >
             <KeyboardArrowRight />
           </IconButton>
-          <Typography
-            variant="h5"
-            component="h2"
-            sx={{ fontWeight: "bold", flex: 1, textAlign: "center" }}
-          >
+          <Typography variant="h3" component="h2" sx={{ flex: 1, textAlign: "center" }}>
             {exerciseName}
           </Typography>
           <Box sx={{ width: 48 }} /> {/* Spacer to balance the close button */}
@@ -174,8 +170,12 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
               No history found for this exercise.
             </Typography>
           ) : (
-            exerciseHistory.map(({ date, items }, index) => (
-              <Box key={date} sx={{ mb: 4 }}>
+            exerciseHistory.map(({ date, items }) => (
+              <Paper
+                key={date}
+                elevation={4}
+                sx={{ mb: 4, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
+              >
                 <Typography
                   variant="h6"
                   sx={{
@@ -186,20 +186,12 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                 >
                   {format(parseISO(date), "EEE, MMMM d, yyyy")}
                 </Typography>
-
-                <TableContainer
-                  component={Paper}
-                  sx={{
-                    bgcolor: "background.default",
-                    mb: 2,
-                  }}
-                >
+                <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2 }}>
                   <Table size="small">
                     <TableHead>
-                      <TableRow sx={{ bgcolor: "grey.900" }}>
+                      <TableRow>
                         <TableCell
                           sx={{
-                            bgcolor: "grey.900",
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
@@ -210,7 +202,6 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                         </TableCell>
                         <TableCell
                           sx={{
-                            bgcolor: "grey.900",
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
@@ -221,7 +212,6 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                         </TableCell>
                         <TableCell
                           sx={{
-                            bgcolor: "grey.900",
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
@@ -232,7 +222,6 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                         </TableCell>
                         <TableCell
                           sx={{
-                            bgcolor: "grey.900",
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
@@ -285,9 +274,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                     </TableBody>
                   </Table>
                 </TableContainer>
-
-                {index < exerciseHistory.length - 1 && <Divider sx={{ my: 2 }} />}
-              </Box>
+              </Paper>
             ))
           )}
         </Box>
