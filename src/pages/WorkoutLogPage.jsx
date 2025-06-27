@@ -351,45 +351,47 @@ export default function WorkoutLogPage({ onBack }) {
                 flexDirection: "column",
                 alignItems: "flex-start",
                 justifyContent: "flex-start",
-                overflow: "auto",
+                overflow: "hidden",
                 minHeight: 0,
               }}
             >
-              {hoveredDay && workoutDays.includes(hoveredDay) ? (
-                previewLoading ? (
-                  <Box sx={{ color: "text.secondary" }}>Loading...</Box>
-                ) : previewError ? (
-                  <Box sx={{ color: "error.main" }}>{previewError}</Box>
-                ) : previewExercises.length > 0 ? (
-                  <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none", width: "100%" }}>
-                    {previewExercises.map((ex, idx) => (
-                      <>
-                        <li key={ex} style={{ marginBottom: 0, width: "100%" }}>
-                          <Typography
-                            variant="body1"
-                            sx={{
-                              color: "text.primary",
-                              textOverflow: "ellipsis",
-                              overflow: "hidden",
-                              whiteSpace: "nowrap",
-                              width: "100%",
-                              fontSize: "1.1rem",
-                            }}
-                            title={ex}
-                          >
-                            {ex}
-                          </Typography>
-                        </li>
-                        {idx < previewExercises.length - 1 && (
-                          <Divider sx={{ my: 1, width: "100%" }} />
-                        )}
-                      </>
-                    ))}
-                  </Box>
-                ) : (
-                  <Box sx={{ color: "text.secondary" }}>No exercises for this day</Box>
-                )
-              ) : null}
+              <Box sx={{ flex: 1, width: "100%", overflow: "auto", minHeight: 0 }}>
+                {hoveredDay && workoutDays.includes(hoveredDay) ? (
+                  previewLoading ? (
+                    <Box sx={{ color: "text.secondary" }}>Loading...</Box>
+                  ) : previewError ? (
+                    <Box sx={{ color: "error.main" }}>{previewError}</Box>
+                  ) : previewExercises.length > 0 ? (
+                    <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none", width: "100%" }}>
+                      {previewExercises.map((ex, idx) => (
+                        <>
+                          <li key={ex} style={{ marginBottom: 0, width: "100%" }}>
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                color: "text.primary",
+                                textOverflow: "ellipsis",
+                                overflow: "hidden",
+                                whiteSpace: "nowrap",
+                                width: "100%",
+                                fontSize: "1.1rem",
+                              }}
+                              title={ex}
+                            >
+                              {ex}
+                            </Typography>
+                          </li>
+                          {idx < previewExercises.length - 1 && (
+                            <Divider sx={{ my: 1, width: "100%" }} />
+                          )}
+                        </>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Box sx={{ color: "text.secondary" }}>No exercises for this day</Box>
+                  )
+                ) : null}
+              </Box>
             </Paper>
           </Box>
           <Box

@@ -234,7 +234,11 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
             </Box>
           ) : (
             rows.map(({ exerciseName, items }) => (
-              <Box key={exerciseName} sx={{ mb: 4 }}>
+              <Paper
+                key={exerciseName}
+                elevation={4}
+                sx={{ mb: 4, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
+              >
                 <Typography
                   variant="h6"
                   sx={{
@@ -251,13 +255,9 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                 >
                   {exerciseName}
                 </Typography>
-
                 <TableContainer
-                  component={Paper}
-                  sx={{
-                    bgcolor: "background.default",
-                    mb: 2,
-                  }}
+                  component={Box}
+                  sx={{ bgcolor: "background.default", mb: 2, borderRadius: 2 }}
                 >
                   <Table size="small">
                     <TableHead>
@@ -350,7 +350,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                     </TableBody>
                   </Table>
                 </TableContainer>
-              </Box>
+              </Paper>
             ))
           )}
         </Box>
