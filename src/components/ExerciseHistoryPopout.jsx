@@ -11,6 +11,8 @@ import {
   TableRow,
   IconButton,
   Divider,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { KeyboardArrowRight } from "@mui/icons-material";
 import { format, parseISO } from "date-fns";
@@ -19,6 +21,11 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
   const [exerciseHistory, setExerciseHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
 
   useEffect(() => {
     if (!exerciseName || !db) return;
@@ -127,8 +134,6 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
         <Box
           sx={{
             p: 3,
-            borderBottom: 1,
-            borderColor: "divider",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -153,6 +158,17 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
           <Box sx={{ width: 48 }} /> {/* Spacer to balance the close button */}
         </Box>
 
+        {/* Tabs */}
+        <Box sx={{ px: 3, pb: 2 }}>
+          <Tabs value={activeTab} onChange={handleTabChange}>
+            <Tab label="History" />
+            <Tab label="Graph" />
+          </Tabs>
+        </Box>
+
+        {/* Divider */}
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }} />
+
         {/* Content */}
         <Box
           sx={{
@@ -161,130 +177,140 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
             p: 3,
           }}
         >
-          {loading ? (
-            <Typography variant="body1" color="text.secondary">
-              Loading exercise history...
-            </Typography>
-          ) : exerciseHistory.length === 0 ? (
-            <Typography variant="body1" color="text.secondary">
-              No history found for this exercise.
-            </Typography>
-          ) : (
-            exerciseHistory.map(({ date, items }) => (
-              <Paper
-                key={date}
-                elevation={4}
-                sx={{ mb: 4, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
-              >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    mb: 2,
-                    fontWeight: "bold",
-                    color: "text.primary",
-                    cursor: "pointer",
-                    "&:hover": {
-                      color: "primary.main",
-                      textDecoration: "underline",
-                    },
-                  }}
-                  onClick={() => {
-                    onDateSelect(date);
-                    onClose();
-                  }}
-                >
-                  {format(parseISO(date), "EEE, MMMM d, yyyy")}
+          {activeTab === 0 && (
+            <>
+              {loading ? (
+                <Typography variant="body1" color="text.secondary">
+                  Loading exercise history...
                 </Typography>
-                <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2 }}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell
-                          sx={{
-                            color: "text.primary",
-                            fontWeight: "bold",
-                            textAlign: "center",
-                            width: "12.5%",
-                          }}
-                        >
-                          Set
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: "text.primary",
-                            fontWeight: "bold",
-                            textAlign: "center",
-                            width: "12.5%",
-                          }}
-                        >
-                          Weight
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: "text.primary",
-                            fontWeight: "bold",
-                            textAlign: "center",
-                            width: "12.5%",
-                          }}
-                        >
-                          Reps
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            color: "text.primary",
-                            fontWeight: "bold",
-                            textAlign: "left",
-                            width: "62.5%",
-                          }}
-                        >
-                          Comment
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {items.map((item, itemIndex) => (
-                        <TableRow key={itemIndex}>
-                          <TableCell
-                            sx={{
-                              textAlign: "center",
-                              color: "text.primary",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {itemIndex + 1}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              textAlign: "center",
-                              color: "text.primary",
-                            }}
-                          >
-                            {item.metric_weight} kg
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              textAlign: "center",
-                              color: "text.primary",
-                            }}
-                          >
-                            {item.reps}
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              textAlign: "left",
-                              color: "text.primary",
-                              wordBreak: "break-word",
-                            }}
-                          >
-                            {item.comment || ""}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Paper>
-            ))
+              ) : exerciseHistory.length === 0 ? (
+                <Typography variant="body1" color="text.secondary">
+                  No history found for this exercise.
+                </Typography>
+              ) : (
+                exerciseHistory.map(({ date, items }) => (
+                  <Paper
+                    key={date}
+                    elevation={4}
+                    sx={{ mb: 4, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 2,
+                        fontWeight: "bold",
+                        color: "text.primary",
+                        cursor: "pointer",
+                        "&:hover": {
+                          color: "primary.main",
+                          textDecoration: "underline",
+                        },
+                      }}
+                      onClick={() => {
+                        onDateSelect(date);
+                        onClose();
+                      }}
+                    >
+                      {format(parseISO(date), "EEE, MMMM d, yyyy")}
+                    </Typography>
+                    <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2 }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell
+                              sx={{
+                                color: "text.primary",
+                                fontWeight: "bold",
+                                textAlign: "center",
+                                width: "12.5%",
+                              }}
+                            >
+                              Set
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                color: "text.primary",
+                                fontWeight: "bold",
+                                textAlign: "center",
+                                width: "12.5%",
+                              }}
+                            >
+                              Weight
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                color: "text.primary",
+                                fontWeight: "bold",
+                                textAlign: "center",
+                                width: "12.5%",
+                              }}
+                            >
+                              Reps
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                color: "text.primary",
+                                fontWeight: "bold",
+                                textAlign: "left",
+                                width: "62.5%",
+                              }}
+                            >
+                              Comment
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {items.map((item, itemIndex) => (
+                            <TableRow key={itemIndex}>
+                              <TableCell
+                                sx={{
+                                  textAlign: "center",
+                                  color: "text.primary",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                                {itemIndex + 1}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  textAlign: "center",
+                                  color: "text.primary",
+                                }}
+                              >
+                                {item.metric_weight} kg
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  textAlign: "center",
+                                  color: "text.primary",
+                                }}
+                              >
+                                {item.reps}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  textAlign: "left",
+                                  color: "text.primary",
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {item.comment || ""}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Paper>
+                ))
+              )}
+            </>
+          )}
+
+          {activeTab === 1 && (
+            <Typography variant="body1" color="text.secondary">
+              Graph view coming soon...
+            </Typography>
           )}
         </Box>
       </Paper>
