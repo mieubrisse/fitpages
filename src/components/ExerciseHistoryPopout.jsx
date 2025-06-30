@@ -18,7 +18,7 @@ import {
   FormControl,
 } from "@mui/material";
 import { KeyboardArrowRight } from "@mui/icons-material";
-import { format, parseISO, subMonths, subYears } from "date-fns";
+import { format, parseISO, subMonths, subYears, compareAsc } from "date-fns";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useTheme } from "@mui/material/styles";
 
@@ -517,6 +517,9 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                             <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
                               Max Weight
                             </TableCell>
+                            <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
+                              Date
+                            </TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -529,14 +532,43 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                               </TableCell>
                             </TableRow>
                           ) : (
-                            sorted.map(([reps, weight]) => (
-                              <TableRow key={reps}>
-                                <TableCell sx={{ textAlign: "center" }}>{reps}RM</TableCell>
-                                <TableCell sx={{ textAlign: "center" }}>
-                                  {parseFloat(weight).toFixed(1)}kg
-                                </TableCell>
-                              </TableRow>
-                            ))
+                            sorted.map(([reps, weight]) => {
+                              // Find the earliest date this record was achieved
+                              const allSets = exerciseHistory.flatMap(({ date, items }) =>
+                                items.map((item) => ({ ...item, date }))
+                              );
+                              const matchingSets = allSets.filter(
+                                (set) => set.reps === reps && set.metric_weight === weight
+                              );
+                              // Sort by date ascending (earliest first)
+                              matchingSets.sort((a, b) => {
+                                const [ya, ma, da] = a.date.split("-").map(Number);
+                                const [yb, mb, db] = b.date.split("-").map(Number);
+                                return compareAsc(
+                                  new Date(ya, ma - 1, da),
+                                  new Date(yb, mb - 1, db)
+                                );
+                              });
+                              const recordDate =
+                                matchingSets.length > 0 ? matchingSets[0].date : "";
+                              let recordDateFormatted = "";
+                              if (recordDate) {
+                                const [year, month, day] = recordDate.split("-").map(Number);
+                                const localDate = new Date(year, month - 1, day);
+                                recordDateFormatted = format(localDate, "MMM d, yyyy");
+                              }
+                              return (
+                                <TableRow key={reps}>
+                                  <TableCell sx={{ textAlign: "center" }}>{reps}RM</TableCell>
+                                  <TableCell sx={{ textAlign: "center" }}>
+                                    {parseFloat(weight).toFixed(1)}kg
+                                  </TableCell>
+                                  <TableCell sx={{ textAlign: "center" }}>
+                                    {recordDateFormatted}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })
                           )}
                         </TableBody>
                       </Table>
