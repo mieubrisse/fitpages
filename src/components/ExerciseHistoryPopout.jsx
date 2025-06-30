@@ -159,15 +159,21 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
         </Box>
 
         {/* Tabs */}
-        <Box sx={{ px: 3, pb: 2 }}>
-          <Tabs value={activeTab} onChange={handleTabChange}>
+        <Box sx={{ px: 3, pb: 0, borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            sx={{
+              "& .MuiTabs-indicator": {
+                bottom: 0,
+                height: 2,
+              },
+            }}
+          >
             <Tab label="History" />
             <Tab label="Graph" />
           </Tabs>
         </Box>
-
-        {/* Divider */}
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }} />
 
         {/* Content */}
         <Box
