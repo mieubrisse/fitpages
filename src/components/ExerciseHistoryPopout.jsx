@@ -91,7 +91,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
         position: "fixed",
         top: 0,
         right: 0,
-        width: "50vw",
+        width: "45vw",
         height: "100vh",
         zIndex: 1300,
         animation: isClosing ? "slideOut 0.3s ease-in forwards" : "slideIn 0.3s ease-out",
@@ -195,7 +195,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "15%",
+                            width: "12.5%",
                           }}
                         >
                           Set
@@ -205,7 +205,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "20%",
+                            width: "12.5%",
                           }}
                         >
                           Weight
@@ -215,7 +215,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "15%",
+                            width: "12.5%",
                           }}
                         >
                           Reps
@@ -224,8 +224,8 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                           sx={{
                             color: "text.primary",
                             fontWeight: "bold",
-                            textAlign: "center",
-                            width: "50%",
+                            textAlign: "left",
+                            width: "62.5%",
                           }}
                         >
                           Comment
@@ -262,7 +262,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                           </TableCell>
                           <TableCell
                             sx={{
-                              textAlign: "center",
+                              textAlign: "left",
                               color: "text.primary",
                               wordBreak: "break-word",
                             }}

@@ -262,7 +262,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "15%",
+                            width: "12.5%",
                           }}
                         >
                           Set
@@ -272,7 +272,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "20%",
+                            width: "12.5%",
                           }}
                         >
                           Weight
@@ -282,7 +282,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "15%",
+                            width: "12.5%",
                           }}
                         >
                           Reps
@@ -291,8 +291,8 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                           sx={{
                             color: "text.primary",
                             fontWeight: "bold",
-                            textAlign: "center",
-                            width: "50%",
+                            textAlign: "left",
+                            width: "62.5%",
                           }}
                         >
                           Comment
@@ -329,7 +329,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                           </TableCell>
                           <TableCell
                             sx={{
-                              textAlign: "center",
+                              textAlign: "left",
                               color: "text.primary",
                               wordBreak: "break-word",
                             }}
