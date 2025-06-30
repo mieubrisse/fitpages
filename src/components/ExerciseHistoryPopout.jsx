@@ -15,7 +15,7 @@ import {
 import { KeyboardArrowRight } from "@mui/icons-material";
 import { format, parseISO } from "date-fns";
 
-export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
+export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDateSelect }) {
   const [exerciseHistory, setExerciseHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
@@ -182,6 +182,15 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db }) {
                     mb: 2,
                     fontWeight: "bold",
                     color: "text.primary",
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "primary.main",
+                      textDecoration: "underline",
+                    },
+                  }}
+                  onClick={() => {
+                    onDateSelect(date);
+                    onClose();
                   }}
                 >
                   {format(parseISO(date), "EEE, MMMM d, yyyy")}

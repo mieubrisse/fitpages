@@ -201,7 +201,15 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                 minWidth: 320,
                 maxWidth: 320,
                 display: "inline-block",
+                ...(!isToday && {
+                  cursor: "pointer",
+                  "&:hover": {
+                    color: "primary.main",
+                    textDecoration: "underline",
+                  },
+                }),
               }}
+              onClick={!isToday ? () => onDateSelect(today) : undefined}
             >
               {isToday ? "Today" : format(parseISO(selectedDate), "EEE, MMM d")}
             </Typography>
@@ -353,6 +361,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           exerciseName={selectedExercise}
           onClose={handleCloseExercise}
           db={db}
+          onDateSelect={onDateSelect}
         />
       )}
     </Container>
