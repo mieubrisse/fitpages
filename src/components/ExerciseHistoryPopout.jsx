@@ -18,7 +18,7 @@ import {
   FormControl,
 } from "@mui/material";
 import { KeyboardArrowRight } from "@mui/icons-material";
-import { format, parseISO, subMonths, subYears, compareAsc } from "date-fns";
+import { format, parseISO, subMonths, subYears } from "date-fns";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useTheme } from "@mui/material/styles";
 
@@ -486,23 +486,62 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                 </Typography>
               ) : (
                 (() => {
-                  // Flatten all sets for this exercise
-                  const allSets = exerciseHistory.flatMap(({ items }) => items);
+                  // Flatten all sets for this exercise (with date for record lookup)
+                  const allSets = exerciseHistory.flatMap(({ date, items }) =>
+                    items.map((item) => ({ ...item, date }))
+                  );
                   // Bucket by reps (1-15 only)
                   const repBuckets = {};
+                  const repDates = {};
                   allSets.forEach((set) => {
                     const reps = set.reps;
                     const weight = set.metric_weight;
                     if (reps > 0 && reps <= 15) {
                       if (!repBuckets[reps] || weight > repBuckets[reps]) {
                         repBuckets[reps] = weight;
+                        repDates[reps] = set.date;
+                      } else if (weight === repBuckets[reps]) {
+                        // If same weight, keep the earlier date
+                        const currentDate = repDates[reps];
+                        const newDate = set.date;
+                        if (newDate < currentDate) {
+                          repDates[reps] = newDate;
+                        }
                       }
                     }
                   });
-                  // Sort by rep count ascending
-                  const sorted = Object.entries(repBuckets)
+                  // Find the highest rep count present (up to 15)
+                  const repEntries = Object.entries(repBuckets)
                     .map(([reps, weight]) => [parseInt(reps, 10), weight])
                     .sort((a, b) => a[0] - b[0]);
+                  const maxRep = repEntries.length > 0 ? repEntries[repEntries.length - 1][0] : 0;
+                  // Create a map of reps -> maxWeight for easy lookup
+                  const repsToMaxWeight = new Map(repEntries);
+                  // Create a map of reps -> earliest date for easy lookup
+                  const repsToDate = new Map(
+                    Object.entries(repDates).map(([reps, date]) => [parseInt(reps, 10), date])
+                  );
+
+                  // Build the display list working backwards from highest rep
+                  const cascaded = [];
+                  let lastRealWeight = null;
+                  let lastRealDate = null;
+
+                  for (let rep = maxRep; rep >= 1; rep--) {
+                    if (repsToMaxWeight.has(rep)) {
+                      // This is a real record
+                      lastRealWeight = repsToMaxWeight.get(rep);
+                      lastRealDate = repsToDate.get(rep);
+                    }
+
+                    // Add to the beginning of the array (since we're working backwards)
+                    cascaded.unshift({
+                      reps: rep,
+                      weight: lastRealWeight,
+                      date: lastRealDate,
+                      isImplied: !repsToMaxWeight.has(rep),
+                    });
+                  }
                   return (
                     <TableContainer
                       component={Box}
@@ -523,49 +562,37 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {sorted.length === 0 ? (
+                          {cascaded.length === 0 || !cascaded[0].weight ? (
                             <TableRow>
-                              <TableCell colSpan={2} align="center">
+                              <TableCell colSpan={3} align="center">
                                 <Typography variant="body2" color="text.secondary">
                                   No records found.
                                 </Typography>
                               </TableCell>
                             </TableRow>
                           ) : (
-                            sorted.map(([reps, weight]) => {
-                              // Find the earliest date this record was achieved
-                              const allSets = exerciseHistory.flatMap(({ date, items }) =>
-                                items.map((item) => ({ ...item, date }))
-                              );
-                              const matchingSets = allSets.filter(
-                                (set) => set.reps === reps && set.metric_weight === weight
-                              );
-                              // Sort by date ascending (earliest first)
-                              matchingSets.sort((a, b) => {
-                                const [ya, ma, da] = a.date.split("-").map(Number);
-                                const [yb, mb, db] = b.date.split("-").map(Number);
-                                return compareAsc(
-                                  new Date(ya, ma - 1, da),
-                                  new Date(yb, mb - 1, db)
-                                );
-                              });
-                              const recordDate =
-                                matchingSets.length > 0 ? matchingSets[0].date : "";
-                              let recordDateFormatted = "";
-                              if (recordDate) {
-                                const [year, month, day] = recordDate.split("-").map(Number);
+                            cascaded.map(({ reps, weight, date, isImplied }) => {
+                              if (!weight) return null;
+                              let formatted = "";
+                              if (date) {
+                                const [year, month, day] = date.split("-").map(Number);
                                 const localDate = new Date(year, month - 1, day);
-                                recordDateFormatted = format(localDate, "MMM d, yyyy");
+                                formatted = format(localDate, "MMM d, yyyy");
                               }
                               return (
-                                <TableRow key={reps}>
+                                <TableRow
+                                  key={reps}
+                                  sx={{
+                                    backgroundColor: isImplied
+                                      ? theme.palette.action.hover
+                                      : "inherit",
+                                  }}
+                                >
                                   <TableCell sx={{ textAlign: "center" }}>{reps}RM</TableCell>
                                   <TableCell sx={{ textAlign: "center" }}>
                                     {parseFloat(weight).toFixed(1)}kg
                                   </TableCell>
-                                  <TableCell sx={{ textAlign: "center" }}>
-                                    {recordDateFormatted}
-                                  </TableCell>
+                                  <TableCell sx={{ textAlign: "center" }}>{formatted}</TableCell>
                                 </TableRow>
                               );
                             })
