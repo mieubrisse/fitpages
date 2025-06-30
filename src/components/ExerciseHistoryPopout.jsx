@@ -13,15 +13,96 @@ import {
   Divider,
   Tabs,
   Tab,
+  Select,
+  MenuItem,
+  FormControl,
 } from "@mui/material";
 import { KeyboardArrowRight } from "@mui/icons-material";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, subMonths, subYears } from "date-fns";
+import { LineChart } from "@mui/x-charts/LineChart";
+import { useTheme } from "@mui/material/styles";
 
 export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDateSelect }) {
   const [exerciseHistory, setExerciseHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [chartData, setChartData] = useState([]);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [timeframe, setTimeframe] = useState("3months");
+  const theme = useTheme();
+
+  const timeframes = [
+    { value: "3months", label: "3 Months" },
+    { value: "6months", label: "6 Months" },
+    { value: "1year", label: "1 Year" },
+  ];
+
+  const getTimeframeDate = (timeframe) => {
+    const now = new Date();
+    switch (timeframe) {
+      case "3months":
+        return subMonths(now, 3);
+      case "6months":
+        return subMonths(now, 6);
+      case "1year":
+        return subYears(now, 1);
+      default:
+        return subMonths(now, 3);
+    }
+  };
+
+  const fetchChartData = async () => {
+    if (!db || !exerciseName) return;
+
+    setChartLoading(true);
+    try {
+      const startDate = formatDateLocal(getTimeframeDate(timeframe));
+      const endDate = formatDateLocal(new Date());
+
+      const query = `
+        SELECT 
+          t.date,
+          MAX(t.metric_weight) as max_weight
+        FROM training_log t
+        LEFT JOIN exercise e ON t.exercise_id = e._id
+        WHERE e.name = ? AND t.date >= ? AND t.date <= ?
+        GROUP BY t.date
+        ORDER BY t.date ASC;
+      `;
+
+      const result = db.exec(query, [exerciseName, startDate, endDate]);
+
+      if (result.length > 0) {
+        const data = result[0].values.map((row) => ({
+          date: row[0],
+          maxWeight: row[1],
+        }));
+        setChartData(data);
+      } else {
+        setChartData([]);
+      }
+    } catch (err) {
+      console.error("Error fetching chart data:", err);
+      setChartData([]);
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 1) {
+      fetchChartData();
+    }
+  }, [activeTab, timeframe, exerciseName, db]);
+
+  // Format a Date object as YYYY-MM-DD in local time
+  const formatDateLocal = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -314,9 +395,68 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
           )}
 
           {activeTab === 1 && (
-            <Typography variant="body1" color="text.secondary">
-              Graph view coming soon...
-            </Typography>
+            <>
+              <Box sx={{ mb: 3 }}>
+                <FormControl fullWidth>
+                  <Select value={timeframe} onChange={(e) => setTimeframe(e.target.value)}>
+                    {timeframes.map((tf) => (
+                      <MenuItem key={tf.value} value={tf.value}>
+                        {tf.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {chartLoading ? (
+                <Typography variant="body1" color="text.secondary">
+                  Loading chart data...
+                </Typography>
+              ) : chartData.length === 0 ? (
+                <Typography variant="body1" color="text.secondary">
+                  No data available for the selected timeframe.
+                </Typography>
+              ) : (
+                <Box sx={{ height: 400, width: "100%" }}>
+                  <Typography variant="h6" sx={{ mb: 2, textAlign: "center" }}>
+                    Max Weight Over Time
+                  </Typography>
+                  <LineChart
+                    height={350}
+                    series={[
+                      {
+                        data: chartData.map((point) => point.maxWeight),
+                        label: "Max Weight (kg)",
+                        color: theme.palette.primary.main,
+                      },
+                    ]}
+                    xAxis={[
+                      {
+                        data: chartData.map((point) => {
+                          const [year, month, day] = point.date.split("-").map(Number);
+                          return new Date(year, month - 1, day);
+                        }),
+                        scaleType: "time",
+                        valueFormatter: (date) => format(date, "MMM d"),
+                      },
+                    ]}
+                    yAxis={[
+                      {
+                        label: "Weight (kg)",
+                      },
+                    ]}
+                    hideLegend={true}
+                    slotProps={{
+                      mark: {
+                        color: theme.palette.primary.main,
+                        borderColor: theme.palette.primary.main,
+                        fill: "transparent",
+                      },
+                    }}
+                  />
+                </Box>
+              )}
+            </>
           )}
         </Box>
       </Paper>
