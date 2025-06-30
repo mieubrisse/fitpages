@@ -253,6 +253,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
           >
             <Tab label="History" />
             <Tab label="Graph" />
+            <Tab label="Records" />
           </Tabs>
         </Box>
 
@@ -300,7 +301,10 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                     >
                       {format(parseISO(date), "EEE, MMMM d, yyyy")}
                     </Typography>
-                    <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2 }}>
+                    <TableContainer
+                      component={Box}
+                      sx={{ mb: 2, borderRadius: 2, width: "auto", minWidth: 0 }}
+                    >
                       <Table size="small">
                         <TableHead>
                           <TableRow>
@@ -457,6 +461,90 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                 </Box>
               )}
             </>
+          )}
+
+          {activeTab === 2 && (
+            <Paper
+              elevation={4}
+              sx={{
+                mb: 4,
+                borderRadius: 3,
+                p: 2,
+                bgcolor: "background.paper",
+                width: "auto",
+                display: "inline-block",
+                minWidth: 0,
+              }}
+            >
+              {loading ? (
+                <Typography variant="body1" color="text.secondary">
+                  Loading records...
+                </Typography>
+              ) : exerciseHistory.length === 0 ? (
+                <Typography variant="body1" color="text.secondary">
+                  No records found for this exercise.
+                </Typography>
+              ) : (
+                (() => {
+                  // Flatten all sets for this exercise
+                  const allSets = exerciseHistory.flatMap(({ items }) => items);
+                  // Bucket by reps (1-15 only)
+                  const repBuckets = {};
+                  allSets.forEach((set) => {
+                    const reps = set.reps;
+                    const weight = set.metric_weight;
+                    if (reps > 0 && reps <= 15) {
+                      if (!repBuckets[reps] || weight > repBuckets[reps]) {
+                        repBuckets[reps] = weight;
+                      }
+                    }
+                  });
+                  // Sort by rep count ascending
+                  const sorted = Object.entries(repBuckets)
+                    .map(([reps, weight]) => [parseInt(reps, 10), weight])
+                    .sort((a, b) => a[0] - b[0]);
+                  return (
+                    <TableContainer
+                      component={Box}
+                      sx={{ mb: 2, borderRadius: 2, width: "auto", minWidth: 0 }}
+                    >
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
+                              Reps
+                            </TableCell>
+                            <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
+                              Max Weight
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {sorted.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={2} align="center">
+                                <Typography variant="body2" color="text.secondary">
+                                  No records found.
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            sorted.map(([reps, weight]) => (
+                              <TableRow key={reps}>
+                                <TableCell sx={{ textAlign: "center" }}>{reps}RM</TableCell>
+                                <TableCell sx={{ textAlign: "center" }}>
+                                  {parseFloat(weight).toFixed(1)}kg
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  );
+                })()
+              )}
+            </Paper>
           )}
         </Box>
       </Paper>
