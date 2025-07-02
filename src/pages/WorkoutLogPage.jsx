@@ -127,13 +127,18 @@ export default function WorkoutLogPage() {
     fetchExerciseNamesAndDb();
   }, []);
 
-  const handleDateChange = (newDate) => {
-    if (newDate) {
-      setSelectedDate(format(newDate, "yyyy-MM-dd"));
-      // Update calendar month to show the month of the selected date
-      setCalendarMonth(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
+  function selectDate(dateOrString) {
+    let dateObj;
+    if (typeof dateOrString === "string") {
+      dateObj = parseISO(dateOrString);
+    } else {
+      dateObj = dateOrString;
     }
-  };
+    if (!dateObj) return;
+    const newDateStr = format(dateObj, "yyyy-MM-dd");
+    setSelectedDate(newDateStr);
+    setCalendarMonth(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+  }
 
   const handleMonthChange = (newDate) => {
     if (newDate) {
@@ -152,13 +157,6 @@ export default function WorkoutLogPage() {
       setSelectedDate(newSelectedDate);
       setCalendarMonth(new Date(newYear, newMonth, 1));
     }
-  };
-
-  const handleDateSelect = (newDateStr) => {
-    setSelectedDate(newDateStr);
-    // Update calendar month to show the month of the selected date
-    const [year, month] = newDateStr.split("-").map(Number);
-    setCalendarMonth(new Date(year, month - 1, 1));
   };
 
   // When an exercise is selected in the search bar
@@ -243,7 +241,7 @@ export default function WorkoutLogPage() {
         >
           <LogCalendar
             selectedDate={selectedDate}
-            onDateSelect={handleDateChange}
+            onDateSelect={selectDate}
             calendarMonth={calendarMonth}
             onMonthChange={handleMonthChange}
             workoutDays={workoutDays}
@@ -278,7 +276,7 @@ export default function WorkoutLogPage() {
               <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
                 <DailyLog
                   selectedDate={selectedDate}
-                  onDateSelect={handleDateSelect}
+                  onDateSelect={selectDate}
                   language={language}
                   i18nMap={i18nMap}
                 />
@@ -294,6 +292,7 @@ export default function WorkoutLogPage() {
             db={db}
             language={language}
             i18nMap={i18nMap}
+            onDateSelect={selectDate}
           />
         )}
       </Box>
