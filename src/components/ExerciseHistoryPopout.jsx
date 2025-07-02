@@ -21,6 +21,7 @@ import { KeyboardArrowRight } from "@mui/icons-material";
 import { format, parseISO, subMonths, subYears } from "date-fns";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useTheme } from "@mui/material/styles";
+import { enUS, pt } from "date-fns/locale";
 
 export default function ExerciseHistoryPopout({
   exerciseId,
@@ -39,10 +40,61 @@ export default function ExerciseHistoryPopout({
   const [timeframe, setTimeframe] = useState("3months");
   const theme = useTheme();
 
+  // Select locale for date-fns
+  const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
+
+  // Translation map
+  const i18nStaticStrings = {
+    history: language && language.toLowerCase() === "pt" ? "Histórico" : "History",
+    graph: language && language.toLowerCase() === "pt" ? "Gráfico" : "Graph",
+    records: language && language.toLowerCase() === "pt" ? "Recordes" : "Records",
+    loadingHistory:
+      language && language.toLowerCase() === "pt"
+        ? "Carregando histórico de exercício..."
+        : "Loading exercise history...",
+    noHistory:
+      language && language.toLowerCase() === "pt"
+        ? "Nenhum histórico encontrado para este exercício."
+        : "No history found for this exercise.",
+    set: language && language.toLowerCase() === "pt" ? "Série" : "Set",
+    weight: language && language.toLowerCase() === "pt" ? "Peso" : "Weight",
+    reps: language && language.toLowerCase() === "pt" ? "Reps" : "Reps",
+    comment: language && language.toLowerCase() === "pt" ? "Comentário" : "Comment",
+    loadingChart:
+      language && language.toLowerCase() === "pt"
+        ? "Carregando dados do gráfico..."
+        : "Loading chart data...",
+    noChart:
+      language && language.toLowerCase() === "pt"
+        ? "Nenhum dado disponível para o período selecionado."
+        : "No data available for the selected timeframe.",
+    maxWeightOverTime:
+      language && language.toLowerCase() === "pt"
+        ? "Peso Máximo ao Longo do Tempo"
+        : "Max Weight Over Time",
+    loadingRecords:
+      language && language.toLowerCase() === "pt" ? "Carregando recordes..." : "Loading records...",
+    noRecords:
+      language && language.toLowerCase() === "pt"
+        ? "Nenhum recorde encontrado para este exercício."
+        : "No records found for this exercise.",
+    repsCol: language && language.toLowerCase() === "pt" ? "Reps" : "Reps",
+    maxWeightCol: language && language.toLowerCase() === "pt" ? "Peso Máximo" : "Max Weight",
+    dateCol: language && language.toLowerCase() === "pt" ? "Data" : "Date",
+    noRecordsFound:
+      language && language.toLowerCase() === "pt"
+        ? "Nenhum recorde encontrado."
+        : "No records found.",
+    tf3months: language && language.toLowerCase() === "pt" ? "3 meses" : "3 Months",
+    tf6months: language && language.toLowerCase() === "pt" ? "6 meses" : "6 Months",
+    tf1year: language && language.toLowerCase() === "pt" ? "1 ano" : "1 Year",
+    yAxis: language && language.toLowerCase() === "pt" ? "Peso (kg)" : "Weight (kg)",
+  };
+
   const timeframes = [
-    { value: "3months", label: "3 Months" },
-    { value: "6months", label: "6 Months" },
-    { value: "1year", label: "1 Year" },
+    { value: "3months", label: i18nStaticStrings.tf3months },
+    { value: "6months", label: i18nStaticStrings.tf6months },
+    { value: "1year", label: i18nStaticStrings.tf1year },
   ];
 
   const getTimeframeDate = (timeframe) => {
@@ -277,9 +329,9 @@ export default function ExerciseHistoryPopout({
               },
             }}
           >
-            <Tab label="History" />
-            <Tab label="Graph" />
-            <Tab label="Records" />
+            <Tab label={i18nStaticStrings.history} />
+            <Tab label={i18nStaticStrings.graph} />
+            <Tab label={i18nStaticStrings.records} />
           </Tabs>
         </Box>
 
@@ -295,11 +347,11 @@ export default function ExerciseHistoryPopout({
             <>
               {loading ? (
                 <Typography variant="body1" color="text.secondary">
-                  Loading exercise history...
+                  {i18nStaticStrings.loadingHistory}
                 </Typography>
               ) : exerciseHistory.length === 0 ? (
                 <Typography variant="body1" color="text.secondary">
-                  No history found for this exercise.
+                  {i18nStaticStrings.noHistory}
                 </Typography>
               ) : (
                 exerciseHistory.map(({ date, items }) => (
@@ -325,7 +377,7 @@ export default function ExerciseHistoryPopout({
                         onClose();
                       }}
                     >
-                      {format(parseISO(date), "EEE, MMMM d, yyyy")}
+                      {format(parseISO(date), "EEE, MMMM d, yyyy", { locale })}
                     </Typography>
                     <TableContainer
                       component={Box}
@@ -342,7 +394,7 @@ export default function ExerciseHistoryPopout({
                                 width: "12.5%",
                               }}
                             >
-                              Set
+                              {i18nStaticStrings.set}
                             </TableCell>
                             <TableCell
                               sx={{
@@ -352,7 +404,7 @@ export default function ExerciseHistoryPopout({
                                 width: "12.5%",
                               }}
                             >
-                              Weight
+                              {i18nStaticStrings.weight}
                             </TableCell>
                             <TableCell
                               sx={{
@@ -362,7 +414,7 @@ export default function ExerciseHistoryPopout({
                                 width: "12.5%",
                               }}
                             >
-                              Reps
+                              {i18nStaticStrings.reps}
                             </TableCell>
                             <TableCell
                               sx={{
@@ -372,7 +424,7 @@ export default function ExerciseHistoryPopout({
                                 width: "62.5%",
                               }}
                             >
-                              Comment
+                              {i18nStaticStrings.comment}
                             </TableCell>
                           </TableRow>
                         </TableHead>
@@ -440,16 +492,16 @@ export default function ExerciseHistoryPopout({
 
               {chartLoading ? (
                 <Typography variant="body1" color="text.secondary">
-                  Loading chart data...
+                  {i18nStaticStrings.loadingChart}
                 </Typography>
               ) : chartData.length === 0 ? (
                 <Typography variant="body1" color="text.secondary">
-                  No data available for the selected timeframe.
+                  {i18nStaticStrings.noChart}
                 </Typography>
               ) : (
                 <Box sx={{ height: 400, width: "100%" }}>
                   <Typography variant="h6" sx={{ mb: 2, textAlign: "center" }}>
-                    Max Weight Over Time
+                    {i18nStaticStrings.maxWeightOverTime}
                   </Typography>
                   <LineChart
                     height={350}
@@ -468,12 +520,17 @@ export default function ExerciseHistoryPopout({
                           return new Date(year, month - 1, day);
                         }),
                         scaleType: "time",
-                        valueFormatter: (date) => format(date, "MMM d"),
+                        valueFormatter: (date) =>
+                          format(
+                            date,
+                            language && language.toLowerCase() === "pt" ? "d 'de' MMM" : "MMM d",
+                            { locale }
+                          ),
                       },
                     ]}
                     yAxis={[
                       {
-                        label: "Weight (kg)",
+                        label: i18nStaticStrings.yAxis,
                       },
                     ]}
                     hideLegend={true}
@@ -514,11 +571,11 @@ export default function ExerciseHistoryPopout({
             >
               {loading ? (
                 <Typography variant="body1" color="text.secondary">
-                  Loading records...
+                  {i18nStaticStrings.loadingRecords}
                 </Typography>
               ) : exerciseHistory.length === 0 ? (
                 <Typography variant="body1" color="text.secondary">
-                  No records found for this exercise.
+                  {i18nStaticStrings.noRecords}
                 </Typography>
               ) : (
                 (() => {
@@ -604,13 +661,13 @@ export default function ExerciseHistoryPopout({
                         <TableHead>
                           <TableRow>
                             <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
-                              Reps
+                              {i18nStaticStrings.repsCol}
                             </TableCell>
                             <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
-                              Max Weight
+                              {i18nStaticStrings.maxWeightCol}
                             </TableCell>
                             <TableCell sx={{ textAlign: "center", fontWeight: "bold" }}>
-                              Date
+                              {i18nStaticStrings.dateCol}
                             </TableCell>
                           </TableRow>
                         </TableHead>
@@ -619,7 +676,7 @@ export default function ExerciseHistoryPopout({
                             <TableRow>
                               <TableCell colSpan={3} align="center">
                                 <Typography variant="body2" color="text.secondary">
-                                  No records found.
+                                  {i18nStaticStrings.noRecordsFound}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -630,7 +687,13 @@ export default function ExerciseHistoryPopout({
                               if (date) {
                                 const [year, month, day] = date.split("-").map(Number);
                                 const localDate = new Date(year, month - 1, day);
-                                formatted = format(localDate, "MMM d, yyyy");
+                                formatted = format(
+                                  localDate,
+                                  language && language.toLowerCase() === "pt"
+                                    ? "d 'de' MMM, yyyy"
+                                    : "MMM d, yyyy",
+                                  { locale }
+                                );
                               }
                               return (
                                 <TableRow key={reps}>
