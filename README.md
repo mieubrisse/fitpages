@@ -1,4 +1,5 @@
-# FitPages
+FitPages
+========
 
 A web app interface for viewing data exports from [Fitnotes](http://www.fitnotesapp.com/), the best app ever.
 
@@ -60,3 +61,9 @@ fitpages/
 ├── tests/            # Test files
 └── README.md         # This file
 ```
+
+Known Quirks
+-----------------
+- Records don't show beyond 15RM for now
+- The record-calculating algorithm is actually _more_ accurate than Fitnotes' in the case of a weight tie 
+    - For example, if you achieved 6RM 80kg on January 1st and 7RM 80kg on January 8th, Fitnotes would show January 8th for both. This app keeps them separate, since you achieved the 6RM before you achieved the 7RM.
