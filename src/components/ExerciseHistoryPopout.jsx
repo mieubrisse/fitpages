@@ -22,7 +22,14 @@ import { format, parseISO, subMonths, subYears } from "date-fns";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useTheme } from "@mui/material/styles";
 
-export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDateSelect }) {
+export default function ExerciseHistoryPopout({
+  exerciseName,
+  onClose,
+  db,
+  onDateSelect,
+  language = "EN",
+  i18nMap = {},
+}) {
   const [exerciseHistory, setExerciseHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isClosing, setIsClosing] = useState(false);
@@ -171,6 +178,19 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
     }, 300); // Match the animation duration
   };
 
+  // Helper to get the display name for an exercise
+  function getDisplayName(name) {
+    if (
+      language &&
+      language.toLowerCase() !== "en" &&
+      i18nMap[name] &&
+      i18nMap[name][language.toLowerCase()]
+    ) {
+      return i18nMap[name][language.toLowerCase()];
+    }
+    return name;
+  }
+
   if (!exerciseName) return null;
 
   return (
@@ -234,7 +254,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
             <KeyboardArrowRight />
           </IconButton>
           <Typography variant="h3" component="h2" sx={{ flex: 1, textAlign: "center" }}>
-            {exerciseName}
+            {getDisplayName(exerciseName)}
           </Typography>
           <Box sx={{ width: 48 }} /> {/* Spacer to balance the close button */}
         </Box>

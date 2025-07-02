@@ -15,6 +15,10 @@ import {
   Autocomplete,
   Divider,
   Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
@@ -61,6 +65,11 @@ function CustomDay({ workoutDays, selectedDate, ...props }) {
   );
 }
 
+// Helper to title-case a string
+function toTitleCase(str) {
+  return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+}
+
 export default function WorkoutLogPage({ onBack }) {
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = new Date();
@@ -81,6 +90,14 @@ export default function WorkoutLogPage({ onBack }) {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState(null);
   const calendarBoxRef = useRef(null);
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem("fitpages_language") || "EN";
+  });
+  const [i18nMap, setI18nMap] = useState({});
+
+  useEffect(() => {
+    localStorage.setItem("fitpages_language", language);
+  }, [language]);
 
   // Fetch workout days for the past 6 months
   useEffect(() => {
@@ -110,7 +127,7 @@ export default function WorkoutLogPage({ onBack }) {
     fetchWorkoutDays();
   }, []); // Only run once on mount
 
-  // Fetch all exercise names and DB on mount
+  // Fetch all exercise names, DB, and i18n map on mount
   useEffect(() => {
     async function fetchExerciseNamesAndDb() {
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
@@ -122,6 +139,25 @@ export default function WorkoutLogPage({ onBack }) {
       if (result.length > 0) {
         setExerciseNames(result[0].values.map((row) => row[0]));
       }
+      // Parse i18n lines from exercise notes
+      const i18n = {};
+      const notesResult = dbInstance.exec("SELECT name, notes FROM exercise");
+      if (notesResult.length > 0) {
+        notesResult[0].values.forEach(([name, notes]) => {
+          if (!notes) return;
+          const lines = notes.split(/\r?\n/);
+          for (const line of lines) {
+            const match = line.match(/^\s*i18n\/(\w+)[\s:]+(.+)/i);
+            if (match) {
+              const lang = match[1].toLowerCase();
+              const value = toTitleCase(match[2].trim());
+              if (!i18n[name]) i18n[name] = {};
+              i18n[name][lang] = value;
+            }
+          }
+        });
+      }
+      setI18nMap(i18n);
     }
     fetchExerciseNamesAndDb();
   }, []);
@@ -206,6 +242,19 @@ export default function WorkoutLogPage({ onBack }) {
     setSelectedExercise(null);
   };
 
+  // Helper to get the display name for an exercise
+  function getDisplayName(exerciseName) {
+    if (
+      language &&
+      language.toLowerCase() !== "en" &&
+      i18nMap[exerciseName] &&
+      i18nMap[exerciseName][language.toLowerCase()]
+    ) {
+      return i18nMap[exerciseName][language.toLowerCase()];
+    }
+    return exerciseName;
+  }
+
   return (
     <Container
       maxWidth="xl"
@@ -248,11 +297,24 @@ export default function WorkoutLogPage({ onBack }) {
             inputValue={searchValue}
             onInputChange={(_, newInputValue) => setSearchValue(newInputValue)}
             onChange={handleSearchSelect}
-            sx={{ width: 450, mr: { md: 4, xs: 2 } }}
+            sx={{ width: 630, mr: { md: 4, xs: 2 } }}
             renderInput={(params) => (
               <TextField {...params} label="Search exercises" variant="outlined" size="small" />
             )}
           />
+          <FormControl sx={{ minWidth: 100, ml: 2 }} size="small">
+            <InputLabel id="language-select-label">Language</InputLabel>
+            <Select
+              labelId="language-select-label"
+              id="language-select"
+              value={language}
+              label="Language"
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              <MenuItem value="EN">🇬🇧 EN</MenuItem>
+              <MenuItem value="PT">🇵🇹 PT</MenuItem>
+            </Select>
+          </FormControl>
         </Toolbar>
       </AppBar>
       <Divider />
@@ -376,9 +438,9 @@ export default function WorkoutLogPage({ onBack }) {
                                 width: "100%",
                                 fontSize: "1.1rem",
                               }}
-                              title={ex}
+                              title={getDisplayName(ex)}
                             >
-                              {ex}
+                              {getDisplayName(ex)}
                             </Typography>
                           </li>
                           {idx < previewExercises.length - 1 && (
@@ -419,7 +481,12 @@ export default function WorkoutLogPage({ onBack }) {
               }}
             >
               <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-                <DailyLog selectedDate={selectedDate} onDateSelect={handleDateSelect} />
+                <DailyLog
+                  selectedDate={selectedDate}
+                  onDateSelect={handleDateSelect}
+                  language={language}
+                  i18nMap={i18nMap}
+                />
               </Box>
             </Paper>
           </Box>
@@ -430,6 +497,8 @@ export default function WorkoutLogPage({ onBack }) {
             exerciseName={selectedExercise}
             onClose={handleCloseExercise}
             db={db}
+            language={language}
+            i18nMap={i18nMap}
           />
         )}
       </Box>

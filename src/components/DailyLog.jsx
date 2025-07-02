@@ -32,7 +32,7 @@ function parseDateLocal(str) {
   return new Date(year, month - 1, day);
 }
 
-export default function DailyLog({ selectedDate, onDateSelect }) {
+export default function DailyLog({ selectedDate, onDateSelect, language = "EN", i18nMap }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -151,6 +151,20 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
     setSelectedExercise(null);
   };
 
+  // Helper to get the display name for an exercise
+  function getDisplayName(exerciseName) {
+    if (
+      language &&
+      language.toLowerCase() !== "en" &&
+      i18nMap &&
+      i18nMap[exerciseName] &&
+      i18nMap[exerciseName][language.toLowerCase()]
+    ) {
+      return i18nMap[exerciseName][language.toLowerCase()];
+    }
+    return exerciseName;
+  }
+
   if (loading) {
     return <Box sx={{ p: 2, color: "grey.300" }}>Loading workout log...</Box>;
   }
@@ -259,7 +273,7 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
                   }}
                   onClick={() => handleExerciseClick(exerciseName)}
                 >
-                  {exerciseName}
+                  {getDisplayName(exerciseName)}
                 </Typography>
                 <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2 }}>
                   <Table size="small">
@@ -362,6 +376,8 @@ export default function DailyLog({ selectedDate, onDateSelect }) {
           onClose={handleCloseExercise}
           db={db}
           onDateSelect={onDateSelect}
+          language={language}
+          i18nMap={i18nMap}
         />
       )}
     </Container>
