@@ -522,24 +522,54 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                     Object.entries(repDates).map(([reps, date]) => [parseInt(reps, 10), date])
                   );
 
-                  // Build the display list working backwards from highest rep
+                  // Build the display list with simplified cascading logic
                   const cascaded = [];
-                  let lastRealWeight = null;
-                  let lastRealDate = null;
+                  let currentMaxWeight = null;
+                  let currentMaxDate = null;
 
+                  // Start from the highest rep found (up to 15)
+                  if (maxRep > 0) {
+                    currentMaxWeight = repsToMaxWeight.get(maxRep);
+                    currentMaxDate = repsToDate.get(maxRep);
+                  }
+
+                  // Walk downwards by 1 rep at a time
                   for (let rep = maxRep; rep >= 1; rep--) {
-                    if (repsToMaxWeight.has(rep)) {
-                      // This is a real record
-                      lastRealWeight = repsToMaxWeight.get(rep);
-                      lastRealDate = repsToDate.get(rep);
+                    const realWeight = repsToMaxWeight.get(rep);
+                    const realDate = repsToDate.get(rep);
+
+                    // If this rep has a higher weight than our current max, update it
+                    if (realWeight !== undefined) {
+                      if (currentMaxWeight === null || realWeight > currentMaxWeight) {
+                        // Higher weight - always update
+                        currentMaxWeight = realWeight;
+                        currentMaxDate = realDate;
+                      } else if (realWeight === currentMaxWeight && realDate < currentMaxDate) {
+                        // Same weight but earlier date - update to the earlier date
+                        currentMaxWeight = realWeight;
+                        currentMaxDate = realDate;
+                      }
                     }
 
-                    // Add to the beginning of the array (since we're working backwards)
+                    console.log(
+                      "rep: " +
+                        rep +
+                        " realWeight: " +
+                        realWeight +
+                        " currentMaxWeight: " +
+                        currentMaxWeight +
+                        " currentMaxDate: " +
+                        currentMaxDate +
+                        " realDate: " +
+                        realDate
+                    );
+
+                    // Add this rep to the display list
                     cascaded.unshift({
                       reps: rep,
-                      weight: lastRealWeight,
-                      date: lastRealDate,
-                      isImplied: !repsToMaxWeight.has(rep),
+                      weight: currentMaxWeight,
+                      date: currentMaxDate,
+                      isImplied: realWeight === undefined || realWeight < currentMaxWeight,
                     });
                   }
                   return (
@@ -580,19 +610,39 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                                 formatted = format(localDate, "MMM d, yyyy");
                               }
                               return (
-                                <TableRow
-                                  key={reps}
-                                  sx={{
-                                    backgroundColor: isImplied
-                                      ? theme.palette.action.hover
-                                      : "inherit",
-                                  }}
-                                >
+                                <TableRow key={reps}>
                                   <TableCell sx={{ textAlign: "center" }}>{reps}RM</TableCell>
-                                  <TableCell sx={{ textAlign: "center" }}>
+                                  <TableCell
+                                    sx={{
+                                      textAlign: "center",
+                                      color: isImplied ? "text.secondary" : "text.primary",
+                                    }}
+                                  >
                                     {parseFloat(weight).toFixed(1)}kg
                                   </TableCell>
-                                  <TableCell sx={{ textAlign: "center" }}>{formatted}</TableCell>
+                                  <TableCell
+                                    sx={{
+                                      textAlign: "center",
+                                      color: isImplied ? "text.secondary" : "text.primary",
+                                      cursor: date ? "pointer" : "default",
+                                      "&:hover": date
+                                        ? {
+                                            color: "primary.main",
+                                            textDecoration: "underline",
+                                          }
+                                        : {},
+                                    }}
+                                    onClick={
+                                      date
+                                        ? () => {
+                                            onDateSelect(date);
+                                            onClose();
+                                          }
+                                        : undefined
+                                    }
+                                  >
+                                    {formatted}
+                                  </TableCell>
                                 </TableRow>
                               );
                             })

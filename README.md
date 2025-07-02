@@ -1,6 +1,6 @@
 # FitPages
 
-A web app interface for viewing data exports from the popular FitNotes Android app.
+A web app interface for viewing data exports from [Fitnotes](http://www.fitnotesapp.com/), the best app ever.
 
 ## Development Setup
 
