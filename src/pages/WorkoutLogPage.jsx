@@ -24,6 +24,7 @@ import DailyLog from "../components/DailyLog";
 import initSqlJs from "sql.js";
 import ExerciseHistoryPopout from "../components/ExerciseHistoryPopout";
 import LogCalendar from "../components/LogCalendar";
+import TopBannerBar from "../components/TopBannerBar";
 
 function formatDateLocal(date) {
   const year = date.getFullYear();
@@ -189,38 +190,16 @@ export default function WorkoutLogPage() {
         overflow: "hidden",
       }}
     >
-      {/* Top Bar */}
-      <AppBar position="static" color="transparent" elevation={0} sx={{ mb: 0, p: 0 }}>
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between", px: 0 }}>
-          {/* Move language switcher to the left */}
-          <FormControl sx={{ minWidth: 100, ml: 2 }} size="small">
-            <Select
-              id="language-select"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              displayEmpty
-            >
-              <MenuItem value="EN">🇬🇧 EN</MenuItem>
-              <MenuItem value="PT">🇵🇹 PT</MenuItem>
-            </Select>
-          </FormControl>
-          {/* Spacer to push search bar to the right */}
-          <Box sx={{ flex: 1 }} />
-          {/* Search bar on the right */}
-          <Autocomplete
-            freeSolo
-            options={exerciseNames}
-            value={searchSelected}
-            inputValue={searchValue}
-            onInputChange={(_, newInputValue) => setSearchValue(newInputValue)}
-            onChange={handleSearchSelect}
-            sx={{ width: 630, mr: { md: 4, xs: 2 } }}
-            renderInput={(params) => (
-              <TextField {...params} label="Search exercises" variant="outlined" size="small" />
-            )}
-          />
-        </Toolbar>
-      </AppBar>
+      <TopBannerBar
+        language={language}
+        setLanguage={setLanguage}
+        exerciseNames={exerciseNames}
+        searchSelected={searchSelected}
+        searchValue={searchValue}
+        setSearchValue={setSearchValue}
+        handleSearchSelect={handleSearchSelect}
+        i18nMap={i18nMap}
+      />
       <Divider />
       {/* Main Content with unified padding */}
       <Box

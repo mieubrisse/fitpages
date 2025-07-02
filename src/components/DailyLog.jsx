@@ -18,6 +18,7 @@ import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import initSqlJs from "sql.js";
 import { format, parseISO } from "date-fns";
 import ExerciseHistoryPopout from "./ExerciseHistoryPopout";
+import { enUS, pt } from "date-fns/locale";
 
 // Format a Date object as YYYY-MM-DD in local time
 function formatDateLocal(date) {
@@ -38,6 +39,24 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
   const [error, setError] = useState(null);
   const [db, setDb] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
+
+  // Select locale for date-fns
+  const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
+
+  // Translation map
+  const t = {
+    today: language && language.toLowerCase() === "pt" ? "Hoje" : "Today",
+    loading:
+      language && language.toLowerCase() === "pt"
+        ? "Carregando registro de treino..."
+        : "Loading workout log...",
+    error: language && language.toLowerCase() === "pt" ? "Erro: " : "Error: ",
+    noData: language && language.toLowerCase() === "pt" ? "Sem dados" : "No data",
+    set: language && language.toLowerCase() === "pt" ? "Série" : "Set",
+    weight: language && language.toLowerCase() === "pt" ? "Peso" : "Weight",
+    reps: language && language.toLowerCase() === "pt" ? "Reps" : "Reps",
+    comment: language && language.toLowerCase() === "pt" ? "Comentário" : "Comment",
+  };
 
   // Load DB only once
   useEffect(() => {
@@ -166,10 +185,15 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
   }
 
   if (loading) {
-    return <Box sx={{ p: 2, color: "grey.300" }}>Loading workout log...</Box>;
+    return <Box sx={{ p: 2, color: "grey.300" }}>{t.loading}</Box>;
   }
   if (error) {
-    return <Box sx={{ p: 2, color: "error.main" }}>Error: {error}</Box>;
+    return (
+      <Box sx={{ p: 2, color: "error.main" }}>
+        {t.error}
+        {error}
+      </Box>
+    );
   }
 
   return (
@@ -225,7 +249,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
               }}
               onClick={!isToday ? () => onDateSelect(today) : undefined}
             >
-              {isToday ? "Today" : format(parseISO(selectedDate), "EEE, MMM d")}
+              {isToday ? t.today : format(parseISO(selectedDate), "EEE, MMM d", { locale })}
             </Typography>
             <IconButton onClick={goToNextDay} aria-label="Next day" size="large" disabled={isToday}>
               <ChevronRight />
@@ -249,7 +273,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
               }}
             >
               <Typography variant="body1" color="text.secondary" sx={{ fontSize: "1.6875rem" }}>
-                No data
+                {t.noData}
               </Typography>
             </Box>
           ) : (
@@ -287,7 +311,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                             width: "12.5%",
                           }}
                         >
-                          Set
+                          {t.set}
                         </TableCell>
                         <TableCell
                           sx={{
@@ -297,7 +321,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                             width: "12.5%",
                           }}
                         >
-                          Weight
+                          {t.weight}
                         </TableCell>
                         <TableCell
                           sx={{
@@ -307,7 +331,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                             width: "12.5%",
                           }}
                         >
-                          Reps
+                          {t.reps}
                         </TableCell>
                         <TableCell
                           sx={{
@@ -317,7 +341,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                             width: "62.5%",
                           }}
                         >
-                          Comment
+                          {t.comment}
                         </TableCell>
                       </TableRow>
                     </TableHead>
