@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -23,45 +23,13 @@ import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
 import initSqlJs from "sql.js";
 import ExerciseHistoryPopout from "../components/ExerciseHistoryPopout";
+import LogCalendar from "../components/LogCalendar";
 
 function formatDateLocal(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-// Custom day component that highlights workout days and the selected day
-function CustomDay({ workoutDays, selectedDate, ...props }) {
-  const dateStr = format(props.day, "yyyy-MM-dd");
-  const hasWorkout = workoutDays.includes(dateStr);
-  const isSelected = dateStr === selectedDate;
-
-  return (
-    <PickersDay
-      {...props}
-      sx={{
-        ...(hasWorkout && {
-          backgroundColor: (theme) => theme.palette.action.selected,
-          color: (theme) => theme.palette.text.primary,
-          "&:hover": {
-            backgroundColor: (theme) => theme.palette.action.hover,
-          },
-        }),
-        ...(isSelected && {
-          backgroundColor: (theme) => theme.palette.primary.main,
-          color: (theme) => theme.palette.primary.contrastText,
-          fontWeight: "bold",
-          borderRadius: "50%",
-          boxShadow: 3,
-          "&:hover": {
-            backgroundColor: (theme) => theme.palette.primary.dark,
-            color: (theme) => theme.palette.primary.contrastText,
-          },
-        }),
-      }}
-    />
-  );
 }
 
 // Helper to title-case a string (Unicode-aware, handles accents)
@@ -87,11 +55,6 @@ export default function WorkoutLogPage() {
   const [searchSelected, setSearchSelected] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [db, setDb] = useState(null);
-  const [hoveredDay, setHoveredDay] = useState(null);
-  const [previewExercises, setPreviewExercises] = useState([]);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewError, setPreviewError] = useState(null);
-  const calendarBoxRef = useRef(null);
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem("fitpages_language") || "EN";
   });
@@ -151,7 +114,6 @@ export default function WorkoutLogPage() {
           for (const line of lines) {
             const match = line.match(/^\s*i18n\/(\w+)[:]*[\s]+(.+)/i);
             if (match) {
-              console.log("Found i18n for " + name + " in " + match[1] + ": " + match[2]);
               const lang = match[1].toLowerCase();
               const value = toTitleCase(match[2].trim());
               if (!i18n[name]) i18n[name] = {};
@@ -164,38 +126,6 @@ export default function WorkoutLogPage() {
     }
     fetchExerciseNamesAndDb();
   }, []);
-
-  // Fetch exercises for hovered day
-  useEffect(() => {
-    if (!db || !hoveredDay || !workoutDays.includes(hoveredDay)) {
-      setPreviewExercises([]);
-      setPreviewLoading(false);
-      setPreviewError(null);
-      return;
-    }
-    setPreviewLoading(true);
-    setPreviewError(null);
-    try {
-      const query = `
-        SELECT e.name AS exercise_name
-        FROM training_log t
-        LEFT JOIN exercise e ON t.exercise_id = e._id
-        WHERE t.date = ?
-        GROUP BY e.name
-        ORDER BY MIN(t._id) ASC;
-      `;
-      const result = db.exec(query, [hoveredDay]);
-      if (result.length > 0) {
-        setPreviewExercises(result[0].values.map((row) => row[0]));
-      } else {
-        setPreviewExercises([]);
-      }
-      setPreviewLoading(false);
-    } catch {
-      setPreviewError("Error loading exercises");
-      setPreviewLoading(false);
-    }
-  }, [db, hoveredDay, workoutDays]);
 
   const handleDateChange = (newDate) => {
     if (newDate) {
@@ -244,19 +174,6 @@ export default function WorkoutLogPage() {
   const handleCloseExercise = () => {
     setSelectedExercise(null);
   };
-
-  // Helper to get the display name for an exercise
-  function getDisplayName(exerciseName) {
-    if (
-      language &&
-      language.toLowerCase() !== "en" &&
-      i18nMap[exerciseName] &&
-      i18nMap[exerciseName][language.toLowerCase()]
-    ) {
-      return i18nMap[exerciseName][language.toLowerCase()];
-    }
-    return exerciseName;
-  }
 
   return (
     <Container
@@ -324,127 +241,16 @@ export default function WorkoutLogPage() {
             overflow: "hidden",
           }}
         >
-          <Box
-            ref={calendarBoxRef}
-            sx={{
-              mr: { md: 2, xs: 0 },
-              flexShrink: 0,
-              pt: 2,
-              pb: 0,
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-              minHeight: 0,
-              maxHeight: "100%",
-              overflow: "hidden",
-              flex: 1,
-            }}
-          >
-            <Box sx={{ minHeight: 0 }}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <StaticDatePicker
-                  calendarMonth={calendarMonth}
-                  value={parseISO(selectedDate)}
-                  onChange={handleDateChange}
-                  onMonthChange={handleMonthChange}
-                  showDaysOutsideCurrentMonth={true}
-                  shouldDisableDate={(date) => {
-                    const today = new Date();
-                    today.setHours(23, 59, 59, 999); // End of today
-                    return date > today;
-                  }}
-                  reduceAnimations={true}
-                  slots={{
-                    toolbar: () => null,
-                    day: (props) => (
-                      <CustomDay
-                        {...props}
-                        workoutDays={workoutDays}
-                        selectedDate={selectedDate}
-                        onMouseEnter={() => setHoveredDay(format(props.day, "yyyy-MM-dd"))}
-                        onMouseLeave={() => setHoveredDay(null)}
-                      />
-                    ),
-                    actionBar: () => null,
-                  }}
-                  sx={{
-                    backgroundColor: "background.paper",
-                    color: "text.primary",
-                    "& .MuiPickersDay-root": {
-                      color: "text.primary",
-                      "&.Mui-selected": {
-                        backgroundColor: "primary.main",
-                        color: "primary.contrastText",
-                      },
-                      "&.MuiPickersDay-today": {
-                        borderColor: "primary.main",
-                      },
-                    },
-                    "& .MuiPickersCalendarHeader-root": {
-                      color: "text.primary",
-                    },
-                    "& .MuiPickersDay-root.MuiPickersDay-dayOutsideMonth": {
-                      opacity: 0.3,
-                      color: "text.secondary",
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Box>
-            <Paper
-              elevation={8}
-              sx={{
-                flex: 1,
-                bgcolor: "background.paper",
-                borderRadius: 4,
-                p: 2,
-                display: { xs: "none", md: "flex" },
-                flexDirection: "column",
-                alignItems: "flex-start",
-                justifyContent: "flex-start",
-                overflow: "hidden",
-                minHeight: 0,
-              }}
-            >
-              <Box sx={{ flex: 1, width: "100%", overflow: "auto", minHeight: 0 }}>
-                {hoveredDay && workoutDays.includes(hoveredDay) ? (
-                  previewLoading ? (
-                    <Box sx={{ color: "text.secondary" }}>Loading...</Box>
-                  ) : previewError ? (
-                    <Box sx={{ color: "error.main" }}>{previewError}</Box>
-                  ) : previewExercises.length > 0 ? (
-                    <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none", width: "100%" }}>
-                      {previewExercises.map((ex, idx) => (
-                        <>
-                          <li key={ex} style={{ marginBottom: 0, width: "100%" }}>
-                            <Typography
-                              variant="body1"
-                              sx={{
-                                color: "text.primary",
-                                textOverflow: "ellipsis",
-                                overflow: "hidden",
-                                whiteSpace: "nowrap",
-                                width: "100%",
-                                fontSize: "1.1rem",
-                              }}
-                              title={getDisplayName(ex)}
-                            >
-                              {getDisplayName(ex)}
-                            </Typography>
-                          </li>
-                          {idx < previewExercises.length - 1 && (
-                            <Divider sx={{ my: 1, width: "100%" }} />
-                          )}
-                        </>
-                      ))}
-                    </Box>
-                  ) : (
-                    <Box sx={{ color: "text.secondary" }}>No exercises for this day</Box>
-                  )
-                ) : null}
-              </Box>
-            </Paper>
-          </Box>
+          <LogCalendar
+            selectedDate={selectedDate}
+            onDateSelect={handleDateChange}
+            calendarMonth={calendarMonth}
+            onMonthChange={handleMonthChange}
+            workoutDays={workoutDays}
+            db={db}
+            i18nMap={i18nMap}
+            language={language}
+          />
           <Box
             sx={{
               flexGrow: 1,
