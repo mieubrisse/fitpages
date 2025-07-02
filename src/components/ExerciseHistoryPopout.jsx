@@ -18,7 +18,7 @@ import {
   FormControl,
 } from "@mui/material";
 import { KeyboardArrowRight } from "@mui/icons-material";
-import { format, parseISO, subMonths, subYears } from "date-fns";
+import { format, parseISO, subMonths } from "date-fns";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useTheme } from "@mui/material/styles";
 import { enUS, pt } from "date-fns/locale";
@@ -37,7 +37,7 @@ export default function ExerciseHistoryPopout({
   const [activeTab, setActiveTab] = useState(0);
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
-  const [timeframe, setTimeframe] = useState("3months");
+  const [timeframe, setTimeframe] = useState(3);
   const theme = useTheme();
 
   // Select locale for date-fns
@@ -91,24 +91,16 @@ export default function ExerciseHistoryPopout({
     yAxis: language && language.toLowerCase() === "pt" ? "Peso (kg)" : "Weight (kg)",
   };
 
-  const timeframes = [
-    { value: "3months", label: i18nStaticStrings.tf3months },
-    { value: "6months", label: i18nStaticStrings.tf6months },
-    { value: "1year", label: i18nStaticStrings.tf1year },
+  // Timeframe options: value is number of months
+  const graphTimeframes = [
+    { value: 3, label: i18nStaticStrings.tf3months },
+    { value: 6, label: i18nStaticStrings.tf6months },
+    { value: 12, label: i18nStaticStrings.tf1year },
   ];
 
-  const getTimeframeDate = (timeframe) => {
+  const getTimeframeDate = (months) => {
     const now = new Date();
-    switch (timeframe) {
-      case "3months":
-        return subMonths(now, 3);
-      case "6months":
-        return subMonths(now, 6);
-      case "1year":
-        return subYears(now, 1);
-      default:
-        return subMonths(now, 3);
-    }
+    return subMonths(now, months);
   };
 
   const fetchChartData = async () => {
@@ -480,8 +472,8 @@ export default function ExerciseHistoryPopout({
             <>
               <Box sx={{ mb: 3 }}>
                 <FormControl fullWidth>
-                  <Select value={timeframe} onChange={(e) => setTimeframe(e.target.value)}>
-                    {timeframes.map((tf) => (
+                  <Select value={timeframe} onChange={(e) => setTimeframe(Number(e.target.value))}>
+                    {graphTimeframes.map((tf) => (
                       <MenuItem key={tf.value} value={tf.value}>
                         {tf.label}
                       </MenuItem>
