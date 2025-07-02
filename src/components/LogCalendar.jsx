@@ -5,6 +5,7 @@ import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { format, parseISO } from "date-fns";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
+import { enUS, pt } from "date-fns/locale";
 
 function CustomDay({ workoutDays, selectedDate, ...props }) {
   const dateStr = format(props.day, "yyyy-MM-dd");
@@ -52,6 +53,15 @@ export default function LogCalendar({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState(null);
   const calendarBoxRef = useRef(null);
+
+  // Select locale for date-fns
+  const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
+
+  // Internationalized preview message
+  const noExercisesMsg =
+    language && language.toLowerCase() === "pt"
+      ? "Sem exercícios neste dia"
+      : "No exercises for this day";
 
   useEffect(() => {
     if (!db || !hoveredDay || !workoutDays.includes(hoveredDay)) {
@@ -116,7 +126,7 @@ export default function LogCalendar({
       ref={calendarBoxRef}
     >
       <Box sx={{ minHeight: 0 }}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={locale}>
           <StaticDatePicker
             calendarMonth={calendarMonth}
             value={parseISO(selectedDate)}
@@ -212,7 +222,7 @@ export default function LogCalendar({
                 ))}
               </Box>
             ) : (
-              <Box sx={{ color: "text.secondary" }}>No exercises for this day</Box>
+              <Box sx={{ color: "text.secondary" }}>{noExercisesMsg}</Box>
             )
           ) : null}
         </Box>
