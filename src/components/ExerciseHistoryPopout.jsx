@@ -432,6 +432,7 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                         data: chartData.map((point) => point.maxWeight),
                         label: "Max Weight (kg)",
                         color: theme.palette.primary.main,
+                        showMark: true,
                       },
                     ]}
                     xAxis={[
@@ -456,6 +457,17 @@ export default function ExerciseHistoryPopout({ exerciseName, onClose, db, onDat
                         borderColor: theme.palette.primary.main,
                         fill: "transparent",
                       },
+                    }}
+                    onAxisClick={(_, params) => {
+                      console.log("Axis click: ");
+                      console.log(params);
+                      if (typeof params.dataIndex === "number") {
+                        const clickedDate = chartData[params.dataIndex]?.date;
+                        if (clickedDate) {
+                          onDateSelect(clickedDate);
+                          onClose();
+                        }
+                      }
                     }}
                   />
                 </Box>
