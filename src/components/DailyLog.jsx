@@ -253,7 +253,13 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
               }}
               onClick={!isToday ? () => onDateSelect(today) : undefined}
             >
-              {isToday ? t.today : format(parseISO(selectedDate), "EEE, MMM d", { locale })}
+              {isToday
+                ? t.today
+                : format(
+                    parseISO(selectedDate),
+                    language && language.toLowerCase() === "pt" ? "ccc, d LLL" : "EEE, MMM d",
+                    { locale }
+                  )}
             </Typography>
             <IconButton onClick={goToNextDay} aria-label="Next day" size="large" disabled={isToday}>
               <ChevronRight />

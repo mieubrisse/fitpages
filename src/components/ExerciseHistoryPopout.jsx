@@ -369,7 +369,13 @@ export default function ExerciseHistoryPopout({
                         onClose();
                       }}
                     >
-                      {format(parseISO(date), "EEE, MMMM d, yyyy", { locale })}
+                      {format(
+                        parseISO(date),
+                        language && language.toLowerCase() === "pt"
+                          ? "ccc, d LLLL, yyyy"
+                          : "EEE, MMMM d, yyyy",
+                        { locale }
+                      )}
                     </Typography>
                     <TableContainer
                       component={Box}
@@ -515,7 +521,7 @@ export default function ExerciseHistoryPopout({
                         valueFormatter: (date) =>
                           format(
                             date,
-                            language && language.toLowerCase() === "pt" ? "d 'de' MMM" : "MMM d",
+                            language && language.toLowerCase() === "pt" ? "d LLLL" : "MMM d",
                             { locale }
                           ),
                       },
@@ -682,7 +688,7 @@ export default function ExerciseHistoryPopout({
                                 formatted = format(
                                   localDate,
                                   language && language.toLowerCase() === "pt"
-                                    ? "d 'de' MMM, yyyy"
+                                    ? "d LLL, yyyy"
                                     : "MMM d, yyyy",
                                   { locale }
                                 );
