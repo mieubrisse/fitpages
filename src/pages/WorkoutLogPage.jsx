@@ -18,7 +18,6 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
@@ -65,12 +64,15 @@ function CustomDay({ workoutDays, selectedDate, ...props }) {
   );
 }
 
-// Helper to title-case a string
+// Helper to title-case a string (Unicode-aware, handles accents)
 function toTitleCase(str) {
-  return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  return str.replace(
+    /([^\s]+)/gu,
+    (word) => word.charAt(0).toLocaleUpperCase() + word.slice(1).toLocaleLowerCase()
+  );
 }
 
-export default function WorkoutLogPage({ onBack }) {
+export default function WorkoutLogPage() {
   const [selectedDate, setSelectedDate] = useState(() => {
     const d = new Date();
     return formatDateLocal(d);
@@ -147,8 +149,9 @@ export default function WorkoutLogPage({ onBack }) {
           if (!notes) return;
           const lines = notes.split(/\r?\n/);
           for (const line of lines) {
-            const match = line.match(/^\s*i18n\/(\w+)[\s:]+(.+)/i);
+            const match = line.match(/^\s*i18n\/(\w+)[:]*[\s]+(.+)/i);
             if (match) {
+              console.log("Found i18n for " + name + " in " + match[1] + ": " + match[2]);
               const lang = match[1].toLowerCase();
               const value = toTitleCase(match[2].trim());
               if (!i18n[name]) i18n[name] = {};
@@ -274,22 +277,21 @@ export default function WorkoutLogPage({ onBack }) {
       {/* Top Bar */}
       <AppBar position="static" color="transparent" elevation={0} sx={{ mb: 0, p: 0 }}>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between", px: 0 }}>
-          <Button
-            variant="contained"
-            startIcon={<ArrowBack />}
-            onClick={onBack}
-            sx={{
-              bgcolor: "background.paper",
-              color: "text.primary",
-              "&:hover": {
-                bgcolor: "primary.main",
-                color: "primary.contrastText",
-              },
-              ml: 2,
-            }}
-          >
-            Back to Home
-          </Button>
+          {/* Move language switcher to the left */}
+          <FormControl sx={{ minWidth: 100, ml: 2 }} size="small">
+            <Select
+              id="language-select"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="EN">🇬🇧 EN</MenuItem>
+              <MenuItem value="PT">🇵🇹 PT</MenuItem>
+            </Select>
+          </FormControl>
+          {/* Spacer to push search bar to the right */}
+          <Box sx={{ flex: 1 }} />
+          {/* Search bar on the right */}
           <Autocomplete
             freeSolo
             options={exerciseNames}
@@ -302,19 +304,6 @@ export default function WorkoutLogPage({ onBack }) {
               <TextField {...params} label="Search exercises" variant="outlined" size="small" />
             )}
           />
-          <FormControl sx={{ minWidth: 100, ml: 2 }} size="small">
-            <InputLabel id="language-select-label">Language</InputLabel>
-            <Select
-              labelId="language-select-label"
-              id="language-select"
-              value={language}
-              label="Language"
-              onChange={(e) => setLanguage(e.target.value)}
-            >
-              <MenuItem value="EN">🇬🇧 EN</MenuItem>
-              <MenuItem value="PT">🇵🇹 PT</MenuItem>
-            </Select>
-          </FormControl>
         </Toolbar>
       </AppBar>
       <Divider />

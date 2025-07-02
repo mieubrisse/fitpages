@@ -479,8 +479,6 @@ export default function ExerciseHistoryPopout({
                       },
                     }}
                     onAxisClick={(_, params) => {
-                      console.log("Axis click: ");
-                      console.log(params);
                       if (typeof params.dataIndex === "number") {
                         const clickedDate = chartData[params.dataIndex]?.date;
                         if (clickedDate) {
@@ -582,19 +580,6 @@ export default function ExerciseHistoryPopout({
                         currentMaxDate = realDate;
                       }
                     }
-
-                    console.log(
-                      "rep: " +
-                        rep +
-                        " realWeight: " +
-                        realWeight +
-                        " currentMaxWeight: " +
-                        currentMaxWeight +
-                        " currentMaxDate: " +
-                        currentMaxDate +
-                        " realDate: " +
-                        realDate
-                    );
 
                     // Add this rep to the display list
                     cascaded.unshift({
