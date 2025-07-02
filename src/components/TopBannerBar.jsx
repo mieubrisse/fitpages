@@ -13,7 +13,7 @@ import {
 export default function TopBannerBar({
   language,
   setLanguage,
-  exerciseNames,
+  exerciseIds,
   searchSelected,
   searchValue,
   setSearchValue,
@@ -25,17 +25,22 @@ export default function TopBannerBar({
     language && language.toLowerCase() === "pt" ? "Buscar exercícios" : "Search exercises";
 
   // Helper to get the display name for an exercise
-  function getDisplayName(exerciseName) {
+  function getDisplayName(exerciseId) {
     if (
       language &&
       language.toLowerCase() !== "en" &&
       i18nMap &&
-      i18nMap[exerciseName] &&
-      i18nMap[exerciseName][language.toLowerCase()]
+      i18nMap[exerciseId] &&
+      i18nMap[exerciseId][language.toLowerCase()]
     ) {
-      return i18nMap[exerciseName][language.toLowerCase()];
+      return i18nMap[exerciseId][language.toLowerCase()];
     }
-    return exerciseName;
+    // Fallback to English if available
+    if (i18nMap && i18nMap[exerciseId] && i18nMap[exerciseId]["en"]) {
+      return i18nMap[exerciseId]["en"];
+    }
+    // Fallback to ID if no name is available
+    return String(exerciseId);
   }
 
   return (
@@ -58,7 +63,7 @@ export default function TopBannerBar({
         {/* Search bar on the right */}
         <Autocomplete
           freeSolo
-          options={exerciseNames}
+          options={exerciseIds}
           value={searchSelected}
           inputValue={searchValue}
           onInputChange={(_, newInputValue) => setSearchValue(newInputValue)}

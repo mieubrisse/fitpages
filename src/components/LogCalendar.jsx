@@ -74,11 +74,11 @@ export default function LogCalendar({
     setPreviewError(null);
     try {
       const query = `
-        SELECT e.name AS exercise_name
+        SELECT e._id AS exercise_id
         FROM training_log t
         LEFT JOIN exercise e ON t.exercise_id = e._id
         WHERE t.date = ?
-        GROUP BY e.name
+        GROUP BY e._id
         ORDER BY MIN(t._id) ASC;
       `;
       const result = db.exec(query, [hoveredDay]);
@@ -95,17 +95,22 @@ export default function LogCalendar({
   }, [db, hoveredDay, workoutDays]);
 
   // Helper to get the display name for an exercise
-  function getDisplayName(exerciseName) {
+  function getDisplayName(exerciseId) {
     if (
       language &&
       language.toLowerCase() !== "en" &&
       i18nMap &&
-      i18nMap[exerciseName] &&
-      i18nMap[exerciseName][language.toLowerCase()]
+      i18nMap[exerciseId] &&
+      i18nMap[exerciseId][language.toLowerCase()]
     ) {
-      return i18nMap[exerciseName][language.toLowerCase()];
+      return i18nMap[exerciseId][language.toLowerCase()];
     }
-    return exerciseName;
+    // Fallback to English if available
+    if (i18nMap && i18nMap[exerciseId] && i18nMap[exerciseId]["en"]) {
+      return i18nMap[exerciseId]["en"];
+    }
+    // Fallback to ID if no name is available
+    return String(exerciseId);
   }
 
   return (

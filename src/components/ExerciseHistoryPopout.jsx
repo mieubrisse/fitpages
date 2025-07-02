@@ -23,7 +23,7 @@ import { LineChart } from "@mui/x-charts/LineChart";
 import { useTheme } from "@mui/material/styles";
 
 export default function ExerciseHistoryPopout({
-  exerciseName,
+  exerciseId,
   onClose,
   db,
   onDateSelect,
@@ -60,7 +60,7 @@ export default function ExerciseHistoryPopout({
   };
 
   const fetchChartData = async () => {
-    if (!db || !exerciseName) return;
+    if (!db || !exerciseId) return;
 
     setChartLoading(true);
     try {
@@ -73,12 +73,12 @@ export default function ExerciseHistoryPopout({
           MAX(t.metric_weight) as max_weight
         FROM training_log t
         LEFT JOIN exercise e ON t.exercise_id = e._id
-        WHERE e.name = ? AND t.date >= ? AND t.date <= ?
+        WHERE e._id = ? AND t.date >= ? AND t.date <= ?
         GROUP BY t.date
         ORDER BY t.date ASC;
       `;
 
-      const result = db.exec(query, [exerciseName, startDate, endDate]);
+      const result = db.exec(query, [exerciseId, startDate, endDate]);
 
       if (result.length > 0) {
         const data = result[0].values.map((row) => ({
@@ -101,7 +101,7 @@ export default function ExerciseHistoryPopout({
     if (activeTab === 1) {
       fetchChartData();
     }
-  }, [activeTab, timeframe, exerciseName, db]);
+  }, [activeTab, timeframe, exerciseId, db]);
 
   // Format a Date object as YYYY-MM-DD in local time
   const formatDateLocal = (date) => {
@@ -116,7 +116,7 @@ export default function ExerciseHistoryPopout({
   };
 
   useEffect(() => {
-    if (!exerciseName || !db) return;
+    if (!exerciseId || !db) return;
 
     setLoading(true);
     try {
@@ -130,10 +130,10 @@ export default function ExerciseHistoryPopout({
         FROM training_log t
         LEFT JOIN exercise e ON t.exercise_id = e._id
         LEFT JOIN Comment c ON c.owner_id = t._id
-        WHERE e.name = ?
+        WHERE e._id = ?
         ORDER BY t.date DESC, t._id ASC;
       `;
-      const result = db.exec(query, [exerciseName]);
+      const result = db.exec(query, [exerciseId]);
 
       if (result.length > 0) {
         const data = result[0].values.map((row) => ({
@@ -169,7 +169,7 @@ export default function ExerciseHistoryPopout({
       setExerciseHistory([]);
       setLoading(false);
     }
-  }, [exerciseName, db]);
+  }, [exerciseId, db]);
 
   const handleClose = () => {
     setIsClosing(true);
@@ -179,19 +179,25 @@ export default function ExerciseHistoryPopout({
   };
 
   // Helper to get the display name for an exercise
-  function getDisplayName(name) {
+  function getDisplayName(id) {
     if (
       language &&
       language.toLowerCase() !== "en" &&
-      i18nMap[name] &&
-      i18nMap[name][language.toLowerCase()]
+      i18nMap &&
+      i18nMap[id] &&
+      i18nMap[id][language.toLowerCase()]
     ) {
-      return i18nMap[name][language.toLowerCase()];
+      return i18nMap[id][language.toLowerCase()];
     }
-    return name;
+    // Fallback to English if available
+    if (i18nMap && i18nMap[id] && i18nMap[id]["en"]) {
+      return i18nMap[id]["en"];
+    }
+    // Fallback to ID if no name is available
+    return String(id);
   }
 
-  if (!exerciseName) return null;
+  if (!exerciseId) return null;
 
   return (
     <Box
@@ -254,7 +260,7 @@ export default function ExerciseHistoryPopout({
             <KeyboardArrowRight />
           </IconButton>
           <Typography variant="h3" component="h2" sx={{ flex: 1, textAlign: "center" }}>
-            {getDisplayName(exerciseName)}
+            {getDisplayName(exerciseId)}
           </Typography>
           <Box sx={{ width: 48 }} /> {/* Spacer to balance the close button */}
         </Box>

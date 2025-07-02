@@ -51,7 +51,7 @@ export default function WorkoutLogPage() {
     return parseISO(formatDateLocal(new Date(d.getFullYear(), d.getMonth(), 1)));
   });
   const [workoutDays, setWorkoutDays] = useState([]);
-  const [exerciseNames, setExerciseNames] = useState([]);
+  const [exerciseIds, setExerciseIds] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [searchSelected, setSearchSelected] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -93,39 +93,46 @@ export default function WorkoutLogPage() {
     fetchWorkoutDays();
   }, []); // Only run once on mount
 
-  // Fetch all exercise names, DB, and i18n map on mount
+  // Fetch all exercise IDs, DB, and i18n map on mount
   useEffect(() => {
-    async function fetchExerciseNamesAndDb() {
+    async function fetchExerciseIdsAndDb() {
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
       const response = await fetch("/FitNotes_Backup.fitnotes");
       const arrayBuffer = await response.arrayBuffer();
       const dbInstance = new SQL.Database(new Uint8Array(arrayBuffer));
       setDb(dbInstance);
-      const result = dbInstance.exec("SELECT name FROM exercise ORDER BY name");
+      // Fetch all exercises: _id, name, notes
+      const result = dbInstance.exec("SELECT _id, name, notes FROM exercise ORDER BY _id");
       if (result.length > 0) {
-        setExerciseNames(result[0].values.map((row) => row[0]));
+        setExerciseIds(result[0].values.map((row) => row[0]));
       }
-      // Parse i18n lines from exercise notes
+      // Parse i18n lines from exercise notes and always set English name
       const i18n = {};
-      const notesResult = dbInstance.exec("SELECT name, notes FROM exercise");
-      if (notesResult.length > 0) {
-        notesResult[0].values.forEach(([name, notes]) => {
-          if (!notes) return;
-          const lines = notes.split(/\r?\n/);
-          for (const line of lines) {
-            const match = line.match(/^\s*i18n\/(\w+)[:]*[\s]+(.+)/i);
-            if (match) {
-              const lang = match[1].toLowerCase();
-              const value = toTitleCase(match[2].trim());
-              if (!i18n[name]) i18n[name] = {};
-              i18n[name][lang] = value;
+      if (result.length > 0) {
+        result[0].values.forEach(([id, name, notes]) => {
+          if (!i18n[id]) i18n[id] = {};
+          let foundEn = false;
+          if (notes) {
+            const lines = notes.split(/\r?\n/);
+            for (const line of lines) {
+              const match = line.match(/^\s*i18n\/(\w+)[:]*[\s]+(.+)/i);
+              if (match) {
+                const lang = match[1].toLowerCase();
+                const value = toTitleCase(match[2].trim());
+                i18n[id][lang] = value;
+                if (lang === "en") foundEn = true;
+              }
             }
+          }
+          // Always set English name as fallback
+          if (!foundEn && name) {
+            i18n[id]["en"] = toTitleCase(name.trim());
           }
         });
       }
       setI18nMap(i18n);
     }
-    fetchExerciseNamesAndDb();
+    fetchExerciseIdsAndDb();
   }, []);
 
   function selectDate(dateOrString) {
@@ -193,7 +200,7 @@ export default function WorkoutLogPage() {
       <TopBannerBar
         language={language}
         setLanguage={setLanguage}
-        exerciseNames={exerciseNames}
+        exerciseIds={exerciseIds}
         searchSelected={searchSelected}
         searchValue={searchValue}
         setSearchValue={setSearchValue}
@@ -266,7 +273,7 @@ export default function WorkoutLogPage() {
         {/* Exercise History Popout */}
         {selectedExercise && db && (
           <ExerciseHistoryPopout
-            exerciseName={selectedExercise}
+            exerciseId={selectedExercise}
             onClose={handleCloseExercise}
             db={db}
             language={language}

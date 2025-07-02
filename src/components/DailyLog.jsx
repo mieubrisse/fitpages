@@ -45,7 +45,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
 
   // Translation map
   const t = {
-    today: language && language.toLowerCase() === "pt" ? "Hoje" : "Today",
+    today: language && language.toLowerCase() === "pt" ? "hoje" : "Today",
     loading:
       language && language.toLowerCase() === "pt"
         ? "Carregando registro de treino..."
@@ -85,7 +85,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
       const query = `
         SELECT 
           t.date,
-          e.name AS exercise_name,
+          e._id AS exercise_id,
           t.reps,
           t.metric_weight,
           c.comment AS comment,
@@ -101,7 +101,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
         const data = result[0].values.map((row) => {
           return {
             date: row[0],
-            exercise_name: row[1],
+            exercise_id: row[1],
             reps: row[2],
             metric_weight: row[3],
             comment: row[4] ?? "",
@@ -112,28 +112,28 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
         // Track first appearance of each exercise
         const exerciseFirstAppearance = new Map();
         data.forEach((item, index) => {
-          if (!exerciseFirstAppearance.has(item.exercise_name)) {
-            exerciseFirstAppearance.set(item.exercise_name, index);
+          if (!exerciseFirstAppearance.has(item.exercise_id)) {
+            exerciseFirstAppearance.set(item.exercise_id, index);
           }
         });
 
-        // Group by exercise name
+        // Group by exercise id
         const groupedData = data.reduce((acc, item) => {
-          if (!acc[item.exercise_name]) {
-            acc[item.exercise_name] = [];
+          if (!acc[item.exercise_id]) {
+            acc[item.exercise_id] = [];
           }
-          acc[item.exercise_name].push(item);
+          acc[item.exercise_id].push(item);
           return acc;
         }, {});
 
         // Convert to array and sort by first appearance order
         const sortedData = Object.entries(groupedData)
           .sort(([exerciseA], [exerciseB]) => {
-            const firstA = exerciseFirstAppearance.get(exerciseA);
-            const firstB = exerciseFirstAppearance.get(exerciseB);
+            const firstA = exerciseFirstAppearance.get(Number(exerciseA));
+            const firstB = exerciseFirstAppearance.get(Number(exerciseB));
             return firstA - firstB;
           })
-          .map(([exerciseName, items]) => ({ exerciseName, items }));
+          .map(([exerciseId, items]) => ({ exerciseId, items }));
 
         setRows(sortedData);
       } else {
@@ -162,8 +162,8 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
   const today = formatDateLocal(new Date());
   const isToday = selectedDate === today;
 
-  const handleExerciseClick = (exerciseName) => {
-    setSelectedExercise(exerciseName);
+  const handleExerciseClick = (exerciseId) => {
+    setSelectedExercise(exerciseId);
   };
 
   const handleCloseExercise = () => {
@@ -171,17 +171,21 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
   };
 
   // Helper to get the display name for an exercise
-  function getDisplayName(exerciseName) {
+  function getDisplayName(exerciseId) {
     if (
       language &&
       language.toLowerCase() !== "en" &&
       i18nMap &&
-      i18nMap[exerciseName] &&
-      i18nMap[exerciseName][language.toLowerCase()]
+      i18nMap[exerciseId] &&
+      i18nMap[exerciseId][language.toLowerCase()]
     ) {
-      return i18nMap[exerciseName][language.toLowerCase()];
+      return i18nMap[exerciseId][language.toLowerCase()];
     }
-    return exerciseName;
+    // Fallback to English if available
+    if (i18nMap && i18nMap[exerciseId] && i18nMap[exerciseId]["en"]) {
+      return i18nMap[exerciseId]["en"];
+    }
+    return String(exerciseId);
   }
 
   if (loading) {
@@ -277,9 +281,9 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
               </Typography>
             </Box>
           ) : (
-            rows.map(({ exerciseName, items }) => (
+            rows.map(({ exerciseId, items }) => (
               <Paper
-                key={exerciseName}
+                key={exerciseId}
                 elevation={4}
                 sx={{ mb: 4, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
               >
@@ -295,9 +299,9 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                       textDecoration: "underline",
                     },
                   }}
-                  onClick={() => handleExerciseClick(exerciseName)}
+                  onClick={() => handleExerciseClick(exerciseId)}
                 >
-                  {getDisplayName(exerciseName)}
+                  {getDisplayName(exerciseId)}
                 </Typography>
                 <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2 }}>
                   <Table size="small">
@@ -396,7 +400,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
       {/* Exercise History Popout */}
       {selectedExercise && (
         <ExerciseHistoryPopout
-          exerciseName={selectedExercise}
+          exerciseId={selectedExercise}
           onClose={handleCloseExercise}
           db={db}
           onDateSelect={onDateSelect}
