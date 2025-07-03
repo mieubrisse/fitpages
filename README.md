@@ -28,7 +28,8 @@ This project uses a devcontainer for consistent development environments.
 
 Once the devcontainer is running, you'll have access to:
 
-- `npm run dev` - Start the development server
+- `npm run dev` - Start the Vite development server (frontend only)
+- `npm run dev:vercel` - Start the development server with Vercel (handles both frontend and API routes)
 - `npm run build` - Build for production
 - `npm run preview` - Preview the production build
 - `npm test` - Run tests with Vitest

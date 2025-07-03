@@ -16,6 +16,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: "0.0.0.0",
+      proxy: {
+        "/api": "http://localhost:3000",
+      },
     },
     // Make environment variables available to the API routes
     define: {

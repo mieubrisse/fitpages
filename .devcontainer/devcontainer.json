@@ -2,7 +2,8 @@
   "name": "FitPages Development",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
   "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers-extra/features/vercel-cli:1": {}
   },
   "customizations": {
     "vscode": {
@@ -22,8 +23,8 @@
       }
     }
   },
-  "forwardPorts": [5173],
+  "forwardPorts": [5173, 3000],
   "postCreateCommand": "npm install",
   "remoteUser": "node",
-  "postStartCommand": "npm run dev"
+  "postStartCommand": "(npm run dev & npm run dev:vercel) && tail -f /dev/null"
 }
