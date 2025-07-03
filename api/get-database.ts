@@ -1,6 +1,8 @@
 import { head } from "@vercel/blob";
 import type { IncomingMessage, ServerResponse } from "http";
 
+const DATABASE_BLOB_KEY = "database.fitnotes";
+
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== "GET") {
     res.statusCode = 405;
@@ -10,7 +12,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
 
   try {
-    const blobInfo = await head("database.fitnotes");
+    const blobInfo = await head(DATABASE_BLOB_KEY);
 
     if (!blobInfo) {
       res.statusCode = 404;

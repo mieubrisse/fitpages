@@ -4,6 +4,7 @@ import WorkoutLogPage from "./pages/WorkoutLogPage";
 import { Container, Box, Button, Paper, Stack } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { DatabaseProvider } from "./contexts/DatabaseContext";
 
 const theme = createTheme({
   palette: {
@@ -133,13 +134,15 @@ function ExplorerScreen() {
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<HomeScreen />} />
-          <Route path="/explorer" element={<ExplorerScreen />} />
-          <Route path="/log" element={<WorkoutLogPage onBack={() => window.history.back()} />} />
-        </Routes>
-      </Router>
+      <DatabaseProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<HomeScreen />} />
+            <Route path="/explorer" element={<ExplorerScreen />} />
+            <Route path="/log" element={<WorkoutLogPage onBack={() => window.history.back()} />} />
+          </Routes>
+        </Router>
+      </DatabaseProvider>
     </ThemeProvider>
   );
 }

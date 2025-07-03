@@ -15,10 +15,10 @@ import {
   Typography,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import initSqlJs from "sql.js";
 import { format, parseISO } from "date-fns";
 import ExerciseHistoryPopout from "./ExerciseHistoryPopout";
 import { enUS, pt } from "date-fns/locale";
+import { useDatabase } from "../hooks/useDatabase";
 
 // Format a Date object as YYYY-MM-DD in local time
 function formatDateLocal(date) {
@@ -35,10 +35,9 @@ function parseDateLocal(str) {
 
 export default function DailyLog({ selectedDate, onDateSelect, language = "EN", i18nMap }) {
   const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [db, setDb] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
+
+  const { db, loading, error } = useDatabase();
 
   // Select locale for date-fns
   const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
@@ -58,29 +57,10 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
     comment: language && language.toLowerCase() === "pt" ? "Comentário" : "Comment",
   };
 
-  // Load DB only once
-  useEffect(() => {
-    const loadDb = async () => {
-      try {
-        const SQL = await initSqlJs({
-          locateFile: (file) => `https://sql.js.org/dist/${file}`,
-        });
-        const response = await fetch("/api/get-database");
-        const arrayBuffer = await response.arrayBuffer();
-        const dbInstance = new SQL.Database(new Uint8Array(arrayBuffer));
-        setDb(dbInstance);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-    loadDb();
-  }, []);
-
   // Query for the selected date
   useEffect(() => {
     if (!db) return;
-    setLoading(true);
+
     try {
       const query = `
         SELECT 
@@ -139,12 +119,10 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
       } else {
         setRows([]);
       }
-      setLoading(false);
     } catch (err) {
-      setError(err.message);
-      setLoading(false);
+      console.error("Error querying database:", err);
     }
-  }, [db, selectedDate]);
+  }, [selectedDate, db]);
 
   // Navigation handlers
   const goToPrevDay = () => {

@@ -1,63 +1,44 @@
 import { useState, useEffect } from "react";
-import initSqlJs from "sql.js";
+import { useDatabase } from "../hooks/useDatabase";
 
 const DatabaseViewer = () => {
   const [schema, setSchema] = useState(null);
-  const [db, setDb] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);
   const [tableData, setTableData] = useState(null);
 
+  const { db, loading, error } = useDatabase();
+
   useEffect(() => {
-    const loadDatabase = async () => {
-      try {
-        // Initialize SQL.js
-        const SQL = await initSqlJs({
-          locateFile: (file) => `https://sql.js.org/dist/${file}`,
+    if (!db) return;
+
+    try {
+      // Get all table names
+      const tablesResult = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+      const tables = tablesResult[0]?.values || [];
+
+      // Get schema for each table
+      const schemaInfo = [];
+      for (const [tableName] of tables) {
+        const tableSchema = db.exec(`PRAGMA table_info(${tableName})`);
+        const columns = tableSchema[0]?.values || [];
+
+        schemaInfo.push({
+          name: tableName,
+          columns: columns.map((col) => ({
+            name: col[1],
+            type: col[2],
+            notNull: col[3],
+            defaultValue: col[4],
+            primaryKey: col[5],
+          })),
         });
-
-        // Fetch the database file
-        const response = await fetch("/api/get-database");
-        const arrayBuffer = await response.arrayBuffer();
-
-        // Load the database
-        const dbInstance = new SQL.Database(new Uint8Array(arrayBuffer));
-        setDb(dbInstance);
-
-        // Get all table names
-        const tablesResult = dbInstance.exec("SELECT name FROM sqlite_master WHERE type='table'");
-        const tables = tablesResult[0]?.values || [];
-
-        // Get schema for each table
-        const schemaInfo = [];
-        for (const [tableName] of tables) {
-          const tableSchema = dbInstance.exec(`PRAGMA table_info(${tableName})`);
-          const columns = tableSchema[0]?.values || [];
-
-          schemaInfo.push({
-            name: tableName,
-            columns: columns.map((col) => ({
-              name: col[1],
-              type: col[2],
-              notNull: col[3],
-              defaultValue: col[4],
-              primaryKey: col[5],
-            })),
-          });
-        }
-
-        setSchema(schemaInfo);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error loading database:", err);
-        setError(err.message);
-        setLoading(false);
       }
-    };
 
-    loadDatabase();
-  }, []);
+      setSchema(schemaInfo);
+    } catch (err) {
+      console.error("Error loading database schema:", err);
+    }
+  }, [db]);
 
   // When a table is selected, load its data
   useEffect(() => {

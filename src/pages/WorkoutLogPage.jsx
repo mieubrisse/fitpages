@@ -21,10 +21,10 @@ import {
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
-import initSqlJs from "sql.js";
 import ExerciseHistoryPopout from "../components/ExerciseHistoryPopout";
 import LogCalendar from "../components/LogCalendar";
 import TopBannerBar from "../components/TopBannerBar";
+import { useDatabase } from "../hooks/useDatabase";
 
 function formatDateLocal(date) {
   const year = date.getFullYear();
@@ -55,11 +55,12 @@ export default function WorkoutLogPage() {
   const [searchValue, setSearchValue] = useState("");
   const [searchSelected, setSearchSelected] = useState(null);
   const [selectedExercise, setSelectedExercise] = useState(null);
-  const [db, setDb] = useState(null);
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem("fitpages_language") || "EN";
   });
   const [i18nMap, setI18nMap] = useState({});
+
+  const { db, loading, error } = useDatabase();
 
   useEffect(() => {
     localStorage.setItem("fitpages_language", language);
@@ -67,73 +68,99 @@ export default function WorkoutLogPage() {
 
   // Fetch workout days for the past 6 months
   useEffect(() => {
-    async function fetchWorkoutDays() {
-      const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
-      const response = await fetch("/api/get-database");
-      const arrayBuffer = await response.arrayBuffer();
-      const db = new SQL.Database(new Uint8Array(arrayBuffer));
+    if (!db) return;
 
-      // Calculate 6 months ago from today
-      const today = new Date();
-      const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
-      const startDate = formatDateLocal(sixMonthsAgo);
-      const endDate = formatDateLocal(today);
+    // Calculate 6 months ago from today
+    const today = new Date();
+    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+    const startDate = formatDateLocal(sixMonthsAgo);
+    const endDate = formatDateLocal(today);
 
-      // Query for the past 6 months
-      const query = `SELECT DISTINCT date FROM training_log WHERE date >= ? AND date <= ? ORDER BY date`;
-      const result = db.exec(query, [startDate, endDate]);
+    // Query for the past 6 months
+    const query = `SELECT DISTINCT date FROM training_log WHERE date >= ? AND date <= ? ORDER BY date`;
+    const result = db.exec(query, [startDate, endDate]);
 
-      if (result.length > 0) {
-        const days = result[0].values.map((row) => row[0]);
-        setWorkoutDays(days);
-      } else {
-        setWorkoutDays([]);
-      }
+    if (result.length > 0) {
+      const days = result[0].values.map((row) => row[0]);
+      setWorkoutDays(days);
+    } else {
+      setWorkoutDays([]);
     }
-    fetchWorkoutDays();
-  }, []); // Only run once on mount
+  }, [db]);
 
-  // Fetch all exercise IDs, DB, and i18n map on mount
+  // Fetch all exercise IDs and i18n map on mount
   useEffect(() => {
-    async function fetchExerciseIdsAndDb() {
-      const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
-      const response = await fetch("/api/get-database");
-      const arrayBuffer = await response.arrayBuffer();
-      const dbInstance = new SQL.Database(new Uint8Array(arrayBuffer));
-      setDb(dbInstance);
-      // Fetch all exercises: _id, name, notes
-      const result = dbInstance.exec("SELECT _id, name, notes FROM exercise ORDER BY _id");
-      if (result.length > 0) {
-        setExerciseIds(result[0].values.map((row) => row[0]));
-      }
-      // Parse i18n lines from exercise notes and always set English name
-      const i18n = {};
-      if (result.length > 0) {
-        result[0].values.forEach(([id, name, notes]) => {
-          if (!i18n[id]) i18n[id] = {};
-          let foundEn = false;
-          if (notes) {
-            const lines = notes.split(/\r?\n/);
-            for (const line of lines) {
-              const match = line.match(/^\s*i18n\/(\w+)[:]*[\s]+(.+)/i);
-              if (match) {
-                const lang = match[1].toLowerCase();
-                const value = toTitleCase(match[2].trim());
-                i18n[id][lang] = value;
-                if (lang === "en") foundEn = true;
-              }
+    if (!db) return;
+
+    // Fetch all exercises: _id, name, notes
+    const result = db.exec("SELECT _id, name, notes FROM exercise ORDER BY _id");
+    if (result.length > 0) {
+      setExerciseIds(result[0].values.map((row) => row[0]));
+    }
+    // Parse i18n lines from exercise notes and always set English name
+    const i18n = {};
+    if (result.length > 0) {
+      result[0].values.forEach(([id, name, notes]) => {
+        if (!i18n[id]) i18n[id] = {};
+        let foundEn = false;
+        if (notes) {
+          const lines = notes.split(/\r?\n/);
+          for (const line of lines) {
+            const match = line.match(/^\s*i18n\/(\w+)[:]*[\s]+(.+)/i);
+            if (match) {
+              const lang = match[1].toLowerCase();
+              const value = toTitleCase(match[2].trim());
+              i18n[id][lang] = value;
+              if (lang === "en") foundEn = true;
             }
           }
-          // Always set English name as fallback
-          if (!foundEn && name) {
-            i18n[id]["en"] = toTitleCase(name.trim());
-          }
-        });
-      }
-      setI18nMap(i18n);
+        }
+        // Always set English name as fallback
+        if (!foundEn && name) {
+          i18n[id]["en"] = toTitleCase(name.trim());
+        }
+      });
     }
-    fetchExerciseIdsAndDb();
-  }, []);
+    setI18nMap(i18n);
+  }, [db]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <Container
+        maxWidth="xl"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          bgcolor: "background.default",
+        }}
+      >
+        <Typography variant="h6">Loading database...</Typography>
+      </Container>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Container
+        maxWidth="xl"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          bgcolor: "background.default",
+        }}
+      >
+        <Typography variant="h6" color="error">
+          Error loading database: {error.message}
+        </Typography>
+      </Container>
+    );
+  }
 
   function selectDate(dateOrString) {
     let dateObj;
