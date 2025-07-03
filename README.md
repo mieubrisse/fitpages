@@ -1,5 +1,4 @@
-FitPages
-========
+# FitPages
 
 A web app interface for viewing data exports from [Fitnotes](http://www.fitnotesapp.com/), the best app ever.
 
@@ -18,7 +17,12 @@ This project uses a devcontainer for consistent development environments.
 2. Open the project in VS Code
 3. When prompted, click "Reopen in Container" or use the command palette (`Cmd/Ctrl + Shift + P`) and select "Dev Containers: Reopen in Container"
 4. The container will build and install all dependencies automatically
-5. Once the container is ready, you can start development
+5. Copy `.env.example` to `.env` and add your Vercel Blob Store token:
+   ```bash
+   cp .env.example .env
+   # Edit .env and replace 'your_blob_token_here' with your actual BLOB_READ_WRITE_TOKEN
+   ```
+6. Once the container is ready, you can start development
 
 ### Available Scripts
 
@@ -28,6 +32,12 @@ Once the devcontainer is running, you'll have access to:
 - `npm run build` - Build for production
 - `npm run preview` - Preview the production build
 - `npm test` - Run tests with Vitest
+
+### Environment Variables
+
+This project requires the following environment variables:
+
+- `BLOB_READ_WRITE_TOKEN` - Your Vercel Blob Store read/write token for storing and retrieving the FitNotes database
 
 ### Tech Stack
 
@@ -62,8 +72,8 @@ fitpages/
 └── README.md         # This file
 ```
 
-Known Quirks
------------------
+## Known Quirks
+
 - Records don't show beyond 15RM for now
-- The record-calculating algorithm is actually _more_ accurate than Fitnotes' in the case of a weight tie 
-    - For example, if you achieved 6RM 80kg on January 1st and 7RM 80kg on January 8th, Fitnotes would show January 8th for both. This app keeps them separate, since you achieved the 6RM before you achieved the 7RM.
+- The record-calculating algorithm is actually _more_ accurate than Fitnotes' in the case of a weight tie
+  - For example, if you achieved 6RM 80kg on January 1st and 7RM 80kg on January 8th, Fitnotes would show January 8th for both. This app keeps them separate, since you achieved the 6RM before you achieved the 7RM.
