@@ -18,6 +18,7 @@ import {
   Select,
   MenuItem,
   FormControl,
+  CircularProgress,
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
@@ -137,7 +138,7 @@ export default function WorkoutLogPage() {
           bgcolor: "background.default",
         }}
       >
-        <Typography variant="h6">Loading database...</Typography>
+        <CircularProgress size={64} thickness={5} />
       </Container>
     );
   }
