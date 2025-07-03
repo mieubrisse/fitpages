@@ -18,7 +18,7 @@ const DatabaseViewer = () => {
         });
 
         // Fetch the database file
-        const response = await fetch("/FitNotes_Backup.fitnotes");
+        const response = await fetch("/api/get-database");
         const arrayBuffer = await response.arrayBuffer();
 
         // Load the database

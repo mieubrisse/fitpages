@@ -69,7 +69,7 @@ export default function WorkoutLogPage() {
   useEffect(() => {
     async function fetchWorkoutDays() {
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
-      const response = await fetch("/FitNotes_Backup.fitnotes");
+      const response = await fetch("/api/get-database");
       const arrayBuffer = await response.arrayBuffer();
       const db = new SQL.Database(new Uint8Array(arrayBuffer));
 
@@ -97,7 +97,7 @@ export default function WorkoutLogPage() {
   useEffect(() => {
     async function fetchExerciseIdsAndDb() {
       const SQL = await initSqlJs({ locateFile: (file) => `https://sql.js.org/dist/${file}` });
-      const response = await fetch("/FitNotes_Backup.fitnotes");
+      const response = await fetch("/api/get-database");
       const arrayBuffer = await response.arrayBuffer();
       const dbInstance = new SQL.Database(new Uint8Array(arrayBuffer));
       setDb(dbInstance);
