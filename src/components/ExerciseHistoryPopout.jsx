@@ -413,9 +413,6 @@ export default function ExerciseHistoryPopout({
             <Box
               ref={historyListRef}
               sx={{
-                maxHeight: 500,
-                overflowY: "auto",
-                pr: 1,
                 position: "relative",
               }}
             >
