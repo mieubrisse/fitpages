@@ -238,7 +238,14 @@ export default function WorkoutLogPage() {
       <Divider />
       {/* Main Content with unified padding */}
       <Box
-        sx={{ flex: 1, minHeight: 0, height: "100%", p: 3, boxSizing: "border-box", width: "100%" }}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          height: "100%",
+          p: { xs: 2, md: 3 },
+          boxSizing: "border-box",
+          width: "100%",
+        }}
       >
         <Box
           sx={{

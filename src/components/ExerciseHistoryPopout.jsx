@@ -249,7 +249,7 @@ export default function ExerciseHistoryPopout({
         position: "fixed",
         top: 0,
         right: 0,
-        width: "45vw",
+        width: { xs: "95vw", md: "45vw" },
         height: "100vh",
         zIndex: 1300,
         animation: isClosing ? "slideOut 0.3s ease-in forwards" : "slideIn 0.3s ease-out",
@@ -284,10 +284,11 @@ export default function ExerciseHistoryPopout({
         {/* Header */}
         <Box
           sx={{
-            p: 3,
+            p: { xs: 2, md: 3 },
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            px: 0,
           }}
         >
           <IconButton
@@ -303,7 +304,20 @@ export default function ExerciseHistoryPopout({
           >
             <KeyboardArrowRight />
           </IconButton>
-          <Typography variant="h3" component="h2" sx={{ flex: 1, textAlign: "center" }}>
+          <Typography
+            variant="h3"
+            component="h2"
+            sx={{
+              flex: 1,
+              textAlign: "center",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              px: 1,
+              fontSize: { xs: "2rem", md: "3rem" },
+              minWidth: 0,
+            }}
+          >
             {getDisplayName(exerciseId)}
           </Typography>
           <Box sx={{ width: 48 }} /> {/* Spacer to balance the close button */}
@@ -350,7 +364,12 @@ export default function ExerciseHistoryPopout({
                   <Paper
                     key={date}
                     elevation={4}
-                    sx={{ mb: 4, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
+                    sx={{
+                      mb: { xs: 2, md: 4 },
+                      borderRadius: 3,
+                      p: 2,
+                      bgcolor: "background.paper",
+                    }}
                   >
                     <Typography
                       variant="h6"
@@ -389,7 +408,7 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: "12.5%",
+                                width: { xs: "33.33%", md: "12.5%" },
                               }}
                             >
                               {i18nStaticStrings.set}
@@ -399,7 +418,7 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: "12.5%",
+                                width: { xs: "33.33%", md: "12.5%" },
                               }}
                             >
                               {i18nStaticStrings.weight}
@@ -409,7 +428,7 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: "12.5%",
+                                width: { xs: "33.33%", md: "12.5%" },
                               }}
                             >
                               {i18nStaticStrings.reps}
@@ -420,6 +439,7 @@ export default function ExerciseHistoryPopout({
                                 fontWeight: "bold",
                                 textAlign: "left",
                                 width: "62.5%",
+                                display: { xs: "none", md: "table-cell" },
                               }}
                             >
                               {i18nStaticStrings.comment}
@@ -459,6 +479,7 @@ export default function ExerciseHistoryPopout({
                                   textAlign: "left",
                                   color: "text.primary",
                                   wordBreak: "break-word",
+                                  display: { xs: "none", md: "table-cell" },
                                 }}
                               >
                                 {item.comment || ""}

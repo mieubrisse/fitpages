@@ -285,7 +285,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
               <Paper
                 key={exerciseId}
                 elevation={4}
-                sx={{ mb: 4, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
+                sx={{ mb: { xs: 2, md: 4 }, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
               >
                 <Typography
                   variant="h6"
