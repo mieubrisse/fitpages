@@ -14,7 +14,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { ChevronLeft, ChevronRight, CalendarToday } from "@mui/icons-material";
 import { format, parseISO } from "date-fns";
 import ExerciseHistoryPopout from "./ExerciseHistoryPopout";
 import { enUS, pt } from "date-fns/locale";
@@ -221,9 +221,16 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
             direction="row"
             alignItems="center"
             justifyContent="center"
-            spacing={{ xs: 1, md: 2 }}
+            spacing={{ xs: 0.25, md: 2 }}
             mb={1}
           >
+            <IconButton
+              aria-label="Calendar"
+              size="large"
+              sx={{ display: { xs: "flex", md: "none" } }}
+            >
+              <CalendarToday />
+            </IconButton>
             <IconButton onClick={goToPrevDay} aria-label="Previous day" size="large">
               <ChevronLeft />
             </IconButton>
@@ -232,9 +239,9 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
               sx={{
                 textAlign: "center",
                 color: "text.primary",
-                width: { xs: "200px", md: 320 },
-                minWidth: { xs: "200px", md: 320 },
-                maxWidth: { xs: "200px", md: 320 },
+                width: { xs: "184px", md: 320 },
+                minWidth: { xs: "184px", md: 320 },
+                maxWidth: { xs: "184px", md: 320 },
                 display: "inline-block",
                 fontSize: { xs: "2rem", md: "3rem" },
                 ...(!isToday && {
@@ -258,6 +265,8 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
             <IconButton onClick={goToNextDay} aria-label="Next day" size="large" disabled={isToday}>
               <ChevronRight />
             </IconButton>
+            <Box sx={{ width: { xs: 48, md: 0 } }} />{" "}
+            {/* Invisible spacer to balance calendar button */}
           </Stack>
         </Box>
         <Box
