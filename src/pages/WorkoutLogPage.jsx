@@ -120,14 +120,8 @@ export default function WorkoutLogPage() {
   useEffect(() => {
     if (!db) return;
 
-    // Calculate 3 months ago from today
-    const today = new Date();
-    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, 1);
-    const startDate = formatDateLocal(threeMonthsAgo);
-    const endDate = formatDateLocal(today);
-
     try {
-      // Query for the past 3 months of training data
+      // Query for all training data (no date filter)
       const query = `
         SELECT 
           t.date,
@@ -138,10 +132,9 @@ export default function WorkoutLogPage() {
           t._id
         FROM training_log t
         LEFT JOIN Comment c ON c.owner_id = t._id
-        WHERE t.date >= ? AND t.date <= ?
         ORDER BY t.date ASC, t._id ASC;
       `;
-      const result = db.exec(query, [startDate, endDate]);
+      const result = db.exec(query);
 
       if (result.length > 0) {
         const data = result[0].values.map((row) => ({
