@@ -47,7 +47,7 @@ export default function TopBannerBar({
     <AppBar position="static" color="transparent" elevation={0} sx={{ mb: 0, p: 0 }}>
       <Toolbar sx={{ display: "flex", justifyContent: "space-between", px: 0 }}>
         {/* Language switcher on the left */}
-        <FormControl sx={{ minWidth: 100, ml: 2 }} size="small">
+        <FormControl sx={{ minWidth: 100, ml: 2, mr: { xs: 2, md: 0 } }} size="small">
           <Select
             id="language-select"
             value={language}

@@ -244,8 +244,8 @@ export default function WorkoutLogPage() {
           sx={{
             display: "flex",
             flexDirection: { xs: "column", md: "row" },
-            alignItems: "flex-start",
-            justifyContent: "center",
+            alignItems: { xs: "stretch", md: "flex-start" },
+            justifyContent: { xs: "flex-start", md: "center" },
             width: "100%",
             flex: 1,
             minHeight: 0,
@@ -266,7 +266,7 @@ export default function WorkoutLogPage() {
           <Box
             sx={{
               flexGrow: 1,
-              flex: 3,
+              flex: { xs: 1, md: 3 },
               width: "100%",
               height: "100%",
               minHeight: 0,

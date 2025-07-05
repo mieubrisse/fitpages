@@ -188,7 +188,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
         alignItems: "center",
         justifyContent: "flex-start",
         bgcolor: "background.default",
-        px: 1,
+        px: { xs: 0, md: 1 },
         minHeight: 0,
       }}
     >
@@ -207,8 +207,23 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
           minHeight: 0,
         }}
       >
-        <Box sx={{ px: 3, pt: 3, pb: 0, flexShrink: 0, borderBottom: 1, borderColor: "divider" }}>
-          <Stack direction="row" alignItems="center" justifyContent="center" spacing={2} mb={1}>
+        <Box
+          sx={{
+            px: { xs: 1, md: 3 },
+            pt: 3,
+            pb: 0,
+            flexShrink: 0,
+            borderBottom: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="center"
+            spacing={{ xs: 1, md: 2 }}
+            mb={1}
+          >
             <IconButton onClick={goToPrevDay} aria-label="Previous day" size="large">
               <ChevronLeft />
             </IconButton>
@@ -217,10 +232,11 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
               sx={{
                 textAlign: "center",
                 color: "text.primary",
-                width: 320,
-                minWidth: 320,
-                maxWidth: 320,
+                width: { xs: "200px", md: 320 },
+                minWidth: { xs: "200px", md: 320 },
+                maxWidth: { xs: "200px", md: 320 },
                 display: "inline-block",
+                fontSize: { xs: "2rem", md: "3rem" },
                 ...(!isToday && {
                   cursor: "pointer",
                   "&:hover": {
@@ -248,7 +264,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
           sx={{
             flex: 1,
             overflow: "auto",
-            px: 6,
+            px: { xs: 2, md: 6 },
             py: 3,
             minHeight: 0, // Important for flex child to shrink
           }}
@@ -296,7 +312,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "12.5%",
+                            width: { xs: "33.33%", md: "12.5%" },
                           }}
                         >
                           {t.set}
@@ -306,7 +322,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "12.5%",
+                            width: { xs: "33.33%", md: "12.5%" },
                           }}
                         >
                           {t.weight}
@@ -316,7 +332,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: "12.5%",
+                            width: { xs: "33.33%", md: "12.5%" },
                           }}
                         >
                           {t.reps}
@@ -327,6 +343,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                             fontWeight: "bold",
                             textAlign: "left",
                             width: "62.5%",
+                            display: { xs: "none", md: "table-cell" },
                           }}
                         >
                           {t.comment}
@@ -366,6 +383,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
                               textAlign: "left",
                               color: "text.primary",
                               wordBreak: "break-word",
+                              display: { xs: "none", md: "table-cell" },
                             }}
                           >
                             {item.comment || ""}

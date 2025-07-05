@@ -120,7 +120,7 @@ export default function LogCalendar({
         flexShrink: 0,
         pt: 2,
         pb: 0,
-        display: "flex",
+        display: { xs: "none", md: "flex" },
         flexDirection: "column",
         height: "100%",
         minHeight: 0,
