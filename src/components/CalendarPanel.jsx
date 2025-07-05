@@ -8,9 +8,9 @@ export default function CalendarPanel({
   calendarMonth,
   onMonthChange,
   workoutDays,
-  db,
   i18nMap,
   language,
+  exerciseByDate,
 }) {
   const [hoveredDay, setHoveredDay] = useState(null);
   const [previewExercises, setPreviewExercises] = useState([]);
@@ -18,14 +18,8 @@ export default function CalendarPanel({
   const [previewError, setPreviewError] = useState(null);
   const calendarBoxRef = useRef(null);
 
-  // Internationalized preview message
-  const noExercisesMsg =
-    language && language.toLowerCase() === "pt"
-      ? "Sem exercícios neste dia"
-      : "No exercises for this day";
-
   useEffect(() => {
-    if (!db || !hoveredDay || !workoutDays.includes(hoveredDay)) {
+    if (!hoveredDay || !exerciseByDate || !exerciseByDate[hoveredDay]) {
       setPreviewExercises([]);
       setPreviewLoading(false);
       setPreviewError(null);
@@ -33,18 +27,12 @@ export default function CalendarPanel({
     }
     setPreviewLoading(true);
     setPreviewError(null);
+
     try {
-      const query = `
-        SELECT e._id AS exercise_id
-        FROM training_log t
-        LEFT JOIN exercise e ON t.exercise_id = e._id
-        WHERE t.date = ?
-        GROUP BY e._id
-        ORDER BY MIN(t._id) ASC;
-      `;
-      const result = db.exec(query, [hoveredDay]);
-      if (result.length > 0) {
-        setPreviewExercises(result[0].values.map((row) => row[0]));
+      // Use the exerciseByDate data structure instead of querying the database
+      const dayData = exerciseByDate[hoveredDay];
+      if (dayData && dayData.exerciseOrdering) {
+        setPreviewExercises(dayData.exerciseOrdering);
       } else {
         setPreviewExercises([]);
       }
@@ -53,7 +41,7 @@ export default function CalendarPanel({
       setPreviewError("Error loading exercises");
       setPreviewLoading(false);
     }
-  }, [db, hoveredDay, workoutDays]);
+  }, [hoveredDay, exerciseByDate]);
 
   // Helper to get the display name for an exercise
   function getDisplayName(exerciseId) {
@@ -119,12 +107,15 @@ export default function CalendarPanel({
         }}
       >
         <Box sx={{ flex: 1, width: "100%", overflow: "auto", minHeight: 0 }}>
-          {hoveredDay && workoutDays.includes(hoveredDay) ? (
+          {hoveredDay &&
+          exerciseByDate &&
+          exerciseByDate[hoveredDay] &&
+          previewExercises.length > 0 ? (
             previewLoading ? (
               <Box sx={{ color: "text.secondary" }}>Loading...</Box>
             ) : previewError ? (
               <Box sx={{ color: "error.main" }}>{previewError}</Box>
-            ) : previewExercises.length > 0 ? (
+            ) : (
               <Box component="ul" sx={{ m: 0, p: 0, listStyle: "none", width: "100%" }}>
                 {previewExercises.map((ex, idx) => (
                   <>
@@ -148,8 +139,6 @@ export default function CalendarPanel({
                   </>
                 ))}
               </Box>
-            ) : (
-              <Box sx={{ color: "text.secondary" }}>{noExercisesMsg}</Box>
             )
           ) : null}
         </Box>

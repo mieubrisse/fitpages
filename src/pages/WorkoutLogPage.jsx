@@ -62,6 +62,7 @@ export default function WorkoutLogPage() {
   });
   const [i18nMap, setI18nMap] = useState({});
   const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false);
+  const [exerciseByDate, setExerciseByDate] = useState({});
 
   const { db, loading, error } = useDatabase();
 
@@ -69,27 +70,14 @@ export default function WorkoutLogPage() {
     localStorage.setItem("fitpages_language", language);
   }, [language]);
 
-  // Fetch workout days for the past 6 months
+  // Generate workoutDays from exerciseByDate data structure
   useEffect(() => {
-    if (!db) return;
+    if (!exerciseByDate) return;
 
-    // Calculate 6 months ago from today
-    const today = new Date();
-    const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 6, 1);
-    const startDate = formatDateLocal(sixMonthsAgo);
-    const endDate = formatDateLocal(today);
-
-    // Query for the past 6 months
-    const query = `SELECT DISTINCT date FROM training_log WHERE date >= ? AND date <= ? ORDER BY date`;
-    const result = db.exec(query, [startDate, endDate]);
-
-    if (result.length > 0) {
-      const days = result[0].values.map((row) => row[0]);
-      setWorkoutDays(days);
-    } else {
-      setWorkoutDays([]);
-    }
-  }, [db]);
+    const days = Object.keys(exerciseByDate).sort();
+    setWorkoutDays(days);
+    console.log("workoutDays updated from exerciseByDate:", days);
+  }, [exerciseByDate]);
 
   // Fetch all exercise IDs and i18n map on mount
   useEffect(() => {
@@ -125,6 +113,86 @@ export default function WorkoutLogPage() {
       });
     }
     setI18nMap(i18n);
+  }, [db]);
+
+  // Load exerciseByDate data structure with the most recent 3 months of data
+  useEffect(() => {
+    if (!db) return;
+
+    // Calculate 3 months ago from today
+    const today = new Date();
+    const threeMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+    const startDate = formatDateLocal(threeMonthsAgo);
+    const endDate = formatDateLocal(today);
+
+    try {
+      // Query for the past 3 months of training data
+      const query = `
+        SELECT 
+          t.date,
+          t.exercise_id,
+          t.reps,
+          t.metric_weight,
+          c.comment AS comment,
+          t._id
+        FROM training_log t
+        LEFT JOIN Comment c ON c.owner_id = t._id
+        WHERE t.date >= ? AND t.date <= ?
+        ORDER BY t.date ASC, t._id ASC;
+      `;
+      const result = db.exec(query, [startDate, endDate]);
+
+      if (result.length > 0) {
+        const data = result[0].values.map((row) => ({
+          date: row[0],
+          exercise_id: row[1],
+          reps: row[2],
+          metric_weight: row[3],
+          comment: row[4] ?? "",
+          id: row[5],
+        }));
+
+        // Build the exerciseByDate data structure
+        const exerciseByDateMap = {};
+
+        data.forEach((item) => {
+          const date = item.date;
+          const exerciseId = item.exercise_id;
+
+          if (!exerciseByDateMap[date]) {
+            exerciseByDateMap[date] = {
+              exerciseOrdering: [],
+              exerciseDetails: {},
+            };
+          }
+
+          // Add exercise to ordering if it's the first time we see it for this date
+          if (!exerciseByDateMap[date].exerciseOrdering.includes(exerciseId)) {
+            exerciseByDateMap[date].exerciseOrdering.push(exerciseId);
+          }
+
+          // Add set to exercise details
+          if (!exerciseByDateMap[date].exerciseDetails[exerciseId]) {
+            exerciseByDateMap[date].exerciseDetails[exerciseId] = [];
+          }
+
+          exerciseByDateMap[date].exerciseDetails[exerciseId].push({
+            weight: item.metric_weight,
+            reps: item.reps,
+            comment: item.comment,
+          });
+        });
+
+        setExerciseByDate(exerciseByDateMap);
+        console.log("exerciseByDate data structure loaded:", exerciseByDateMap);
+      } else {
+        setExerciseByDate({});
+        console.log("exerciseByDate data structure loaded: {}");
+      }
+    } catch (err) {
+      console.error("Error loading exerciseByDate data:", err);
+      setExerciseByDate({});
+    }
   }, [db]);
 
   // Show loading state
@@ -268,9 +336,9 @@ export default function WorkoutLogPage() {
             calendarMonth={calendarMonth}
             onMonthChange={handleMonthChange}
             workoutDays={workoutDays}
-            db={db}
             i18nMap={i18nMap}
             language={language}
+            exerciseByDate={exerciseByDate}
           />
           <Box
             sx={{
@@ -330,6 +398,7 @@ export default function WorkoutLogPage() {
           onMonthChange={handleMonthChange}
           workoutDays={workoutDays}
           language={language}
+          exerciseByDate={exerciseByDate}
         />
       </Box>
     </Container>

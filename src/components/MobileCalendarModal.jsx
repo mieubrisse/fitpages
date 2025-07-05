@@ -11,6 +11,7 @@ export default function MobileCalendarModal({
   onMonthChange,
   workoutDays = [],
   language = "EN",
+  exerciseByDate,
 }) {
   const handleDateSelect = (date) => {
     onDateSelect(date);
