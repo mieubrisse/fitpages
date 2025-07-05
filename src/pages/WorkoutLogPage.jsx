@@ -63,6 +63,7 @@ export default function WorkoutLogPage() {
   const [i18nMap, setI18nMap] = useState({});
   const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false);
   const [dateToExercise, setDateToExercise] = useState({});
+  const [exerciseToDate, setExerciseToDate] = useState({});
 
   const { db, loading, error } = useDatabase();
 
@@ -154,11 +155,14 @@ export default function WorkoutLogPage() {
 
         // Build the dateToExercise data structure
         const dateToExerciseMap = {};
+        // Build the exerciseToDate data structure in parallel
+        const exerciseToDateMap = {};
 
         data.forEach((item) => {
           const date = item.date;
           const exerciseId = item.exercise_id;
 
+          // Build dateToExercise structure
           if (!dateToExerciseMap[date]) {
             dateToExerciseMap[date] = {
               exerciseOrdering: [],
@@ -181,17 +185,57 @@ export default function WorkoutLogPage() {
             reps: item.reps,
             comment: item.comment,
           });
+
+          // Build exerciseToDate structure
+          if (!exerciseToDateMap[exerciseId]) {
+            exerciseToDateMap[exerciseId] = {
+              dates: [],
+              exerciseData: {},
+            };
+          }
+
+          // Add date to dates array if it's the first time we see it for this exercise
+          if (!exerciseToDateMap[exerciseId].dates.includes(date)) {
+            exerciseToDateMap[exerciseId].dates.push(date);
+          }
+
+          // Add set to exercise data
+          if (!exerciseToDateMap[exerciseId].exerciseData[date]) {
+            exerciseToDateMap[exerciseId].exerciseData[date] = [];
+          }
+
+          exerciseToDateMap[exerciseId].exerciseData[date].push({
+            weight: item.metric_weight,
+            reps: item.reps,
+            comment: item.comment,
+          });
+        });
+
+        // Sort dates in descending order (newest first) for each exercise
+        Object.keys(exerciseToDateMap).forEach((exerciseId) => {
+          exerciseToDateMap[exerciseId].dates.sort((a, b) => new Date(b) - new Date(a));
         });
 
         setDateToExercise(dateToExerciseMap);
+        setExerciseToDate(exerciseToDateMap);
         console.log("dateToExercise data structure loaded:", dateToExerciseMap);
+        console.log("exerciseToDate data structure loaded:", exerciseToDateMap);
+        console.log(
+          "Sample exerciseToDate entry:",
+          Object.keys(exerciseToDateMap)[0]
+            ? exerciseToDateMap[Object.keys(exerciseToDateMap)[0]]
+            : "No data"
+        );
       } else {
         setDateToExercise({});
+        setExerciseToDate({});
         console.log("dateToExercise data structure loaded: {}");
+        console.log("exerciseToDate data structure loaded: {}");
       }
     } catch (err) {
       console.error("Error loading dateToExercise data:", err);
       setDateToExercise({});
+      setExerciseToDate({});
     }
   }, [db]);
 
@@ -372,6 +416,7 @@ export default function WorkoutLogPage() {
                   i18nMap={i18nMap}
                   onCalendarOpen={() => setMobileCalendarOpen(true)}
                   dateToExercise={dateToExercise}
+                  exerciseToDate={exerciseToDate}
                   db={db}
                 />
               </Box>
@@ -379,16 +424,21 @@ export default function WorkoutLogPage() {
           </Box>
         </Box>
         {/* Exercise History Popout */}
-        {selectedExercise && db && (
+        {selectedExercise && exerciseToDate && Object.keys(exerciseToDate).length > 0 && (
           <ExerciseHistoryPopout
             exerciseId={selectedExercise}
             onClose={handleCloseExercise}
-            db={db}
             language={language}
             i18nMap={i18nMap}
             onDateSelect={selectDate}
+            exerciseToDate={exerciseToDate}
           />
         )}
+        {console.log("ExerciseHistoryPopout render check:", {
+          selectedExercise,
+          hasExerciseToDate: !!exerciseToDate,
+          exerciseToDateKeys: exerciseToDate ? Object.keys(exerciseToDate) : [],
+        })}
 
         {/* Mobile Calendar Modal */}
         <MobileCalendarModal

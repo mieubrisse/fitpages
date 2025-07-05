@@ -26,10 +26,10 @@ import { enUS, pt } from "date-fns/locale";
 export default function ExerciseHistoryPopout({
   exerciseId,
   onClose,
-  db,
   onDateSelect,
   language = "EN",
   i18nMap = {},
+  exerciseToDate,
 }) {
   const [exerciseHistory, setExerciseHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -104,37 +104,55 @@ export default function ExerciseHistoryPopout({
   };
 
   const fetchChartData = async () => {
-    if (!db || !exerciseId) return;
+    console.log("fetchChartData called:", { exerciseId, exerciseToDate });
+
+    if (!exerciseId || !exerciseToDate) {
+      console.log("Missing data for chart:", {
+        hasExerciseId: !!exerciseId,
+        hasExerciseToDate: !!exerciseToDate,
+      });
+      return;
+    }
+
+    // Try both string and number versions of the exercise ID
+    const exerciseData =
+      exerciseToDate[exerciseId] ||
+      exerciseToDate[Number(exerciseId)] ||
+      exerciseToDate[String(exerciseId)];
+
+    if (!exerciseData) {
+      console.log("No exercise data found for chart ID:", exerciseId);
+      return;
+    }
 
     setChartLoading(true);
     try {
       const startDate = formatDateLocal(getTimeframeDate(timeframe));
       const endDate = formatDateLocal(new Date());
+      console.log("Chart timeframe:", { startDate, endDate, timeframe });
 
-      const query = `
-        SELECT 
-          t.date,
-          MAX(t.metric_weight) as max_weight
-        FROM training_log t
-        LEFT JOIN exercise e ON t.exercise_id = e._id
-        WHERE e._id = ? AND t.date >= ? AND t.date <= ?
-        GROUP BY t.date
-        ORDER BY t.date ASC;
-      `;
+      const exerciseData = exerciseToDate[exerciseId];
+      const dates = exerciseData.dates;
+      const exerciseDataByDate = exerciseData.exerciseData;
 
-      const result = db.exec(query, [exerciseId, startDate, endDate]);
+      // Filter dates within the timeframe
+      const filteredDates = dates.filter((date) => date >= startDate && date <= endDate);
+      console.log("Filtered dates for chart:", filteredDates);
 
-      if (result.length > 0) {
-        const data = result[0].values.map((row) => ({
-          date: row[0],
-          maxWeight: row[1],
-        }));
-        setChartData(data);
-      } else {
-        setChartData([]);
-      }
+      // Calculate max weight for each date
+      const data = filteredDates.map((date) => {
+        const sets = exerciseDataByDate[date];
+        const maxWeight = Math.max(...sets.map((set) => set.weight));
+        return {
+          date,
+          maxWeight,
+        };
+      });
+
+      console.log("Chart data:", data);
+      setChartData(data);
     } catch (err) {
-      console.error("Error fetching chart data:", err);
+      console.error("Error processing chart data from exerciseToDate:", err);
       setChartData([]);
     } finally {
       setChartLoading(false);
@@ -145,7 +163,7 @@ export default function ExerciseHistoryPopout({
     if (activeTab === 1) {
       fetchChartData();
     }
-  }, [activeTab, timeframe, exerciseId, db]);
+  }, [activeTab, timeframe, exerciseId, exerciseToDate]);
 
   // Format a Date object as YYYY-MM-DD in local time
   const formatDateLocal = (date) => {
@@ -160,60 +178,65 @@ export default function ExerciseHistoryPopout({
   };
 
   useEffect(() => {
-    if (!exerciseId || !db) return;
+    console.log("ExerciseHistoryPopout useEffect triggered:", { exerciseId, exerciseToDate });
+    console.log("Exercise ID type:", typeof exerciseId);
+    console.log(
+      "Available exercise IDs in exerciseToDate:",
+      exerciseToDate ? Object.keys(exerciseToDate) : "No data"
+    );
+
+    if (!exerciseId || !exerciseToDate) {
+      console.log("Missing data:", {
+        hasExerciseId: !!exerciseId,
+        hasExerciseToDate: !!exerciseToDate,
+      });
+      setExerciseHistory([]);
+      setLoading(false);
+      return;
+    }
+
+    // Try both string and number versions of the exercise ID
+    const exerciseData =
+      exerciseToDate[exerciseId] ||
+      exerciseToDate[Number(exerciseId)] ||
+      exerciseToDate[String(exerciseId)];
+
+    if (!exerciseData) {
+      console.log("No exercise data found for ID:", exerciseId);
+      console.log("Available keys:", Object.keys(exerciseToDate));
+      setExerciseHistory([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
-      const query = `
-        SELECT 
-          t.date,
-          t.reps,
-          t.metric_weight,
-          c.comment AS comment,
-          t._id
-        FROM training_log t
-        LEFT JOIN exercise e ON t.exercise_id = e._id
-        LEFT JOIN Comment c ON c.owner_id = t._id
-        WHERE e._id = ?
-        ORDER BY t.date DESC, t._id ASC;
-      `;
-      const result = db.exec(query, [exerciseId]);
+      console.log("Exercise data for ID", exerciseId, ":", exerciseData);
 
-      if (result.length > 0) {
-        const data = result[0].values.map((row) => ({
-          date: row[0],
-          reps: row[1],
-          metric_weight: row[2],
-          comment: row[3] ?? "",
-          id: row[4],
-        }));
+      const dates = exerciseData.dates;
+      const exerciseDataByDate = exerciseData.exerciseData;
 
-        // Group by date
-        const groupedData = data.reduce((acc, item) => {
-          if (!acc[item.date]) {
-            acc[item.date] = [];
-          }
-          acc[item.date].push(item);
-          return acc;
-        }, {});
+      // Convert to the expected format for the component
+      const sortedData = dates.map((date) => ({
+        date,
+        items: exerciseDataByDate[date].map((set, index) => ({
+          date,
+          reps: set.reps,
+          metric_weight: set.weight,
+          comment: set.comment,
+          id: index, // Using index as id since we don't have the original _id
+        })),
+      }));
 
-        // Convert to array and sort by date (newest first)
-        // Items within each day are already sorted by _id ASC (chronological)
-        const sortedData = Object.entries(groupedData)
-          .sort(([dateA], [dateB]) => new Date(dateB) - new Date(dateA))
-          .map(([date, items]) => ({ date, items }));
-
-        setExerciseHistory(sortedData);
-      } else {
-        setExerciseHistory([]);
-      }
+      console.log("Processed exercise history data:", sortedData);
+      setExerciseHistory(sortedData);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching exercise history:", err);
+      console.error("Error processing exerciseToDate data:", err);
       setExerciseHistory([]);
       setLoading(false);
     }
-  }, [exerciseId, db]);
+  }, [exerciseId, exerciseToDate]);
 
   const handleClose = () => {
     setIsClosing(true);

@@ -39,7 +39,7 @@ export default function DailyLog({
   i18nMap,
   onCalendarOpen,
   dateToExercise,
-  db,
+  exerciseToDate,
 }) {
   const [rows, setRows] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -372,10 +372,10 @@ export default function DailyLog({
         <ExerciseHistoryPopout
           exerciseId={selectedExercise}
           onClose={handleCloseExercise}
-          db={db}
           onDateSelect={onDateSelect}
           language={language}
           i18nMap={i18nMap}
+          exerciseToDate={exerciseToDate}
         />
       )}
     </Container>
