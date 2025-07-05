@@ -62,7 +62,7 @@ export default function WorkoutLogPage() {
   });
   const [i18nMap, setI18nMap] = useState({});
   const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false);
-  const [exerciseByDate, setExerciseByDate] = useState({});
+  const [dateToExercise, setDateToExercise] = useState({});
 
   const { db, loading, error } = useDatabase();
 
@@ -70,14 +70,14 @@ export default function WorkoutLogPage() {
     localStorage.setItem("fitpages_language", language);
   }, [language]);
 
-  // Generate workoutDays from exerciseByDate data structure
+  // Generate workoutDays from dateToExercise data structure
   useEffect(() => {
-    if (!exerciseByDate) return;
+    if (!dateToExercise) return;
 
-    const days = Object.keys(exerciseByDate).sort();
+    const days = Object.keys(dateToExercise).sort();
     setWorkoutDays(days);
-    console.log("workoutDays updated from exerciseByDate:", days);
-  }, [exerciseByDate]);
+    console.log("workoutDays updated from dateToExercise:", days);
+  }, [dateToExercise]);
 
   // Fetch all exercise IDs and i18n map on mount
   useEffect(() => {
@@ -115,7 +115,7 @@ export default function WorkoutLogPage() {
     setI18nMap(i18n);
   }, [db]);
 
-  // Load exerciseByDate data structure with the most recent 3 months of data
+  // Load dateToExercise data structure with the most recent 3 months of data
   useEffect(() => {
     if (!db) return;
 
@@ -152,46 +152,46 @@ export default function WorkoutLogPage() {
           id: row[5],
         }));
 
-        // Build the exerciseByDate data structure
-        const exerciseByDateMap = {};
+        // Build the dateToExercise data structure
+        const dateToExerciseMap = {};
 
         data.forEach((item) => {
           const date = item.date;
           const exerciseId = item.exercise_id;
 
-          if (!exerciseByDateMap[date]) {
-            exerciseByDateMap[date] = {
+          if (!dateToExerciseMap[date]) {
+            dateToExerciseMap[date] = {
               exerciseOrdering: [],
               exerciseDetails: {},
             };
           }
 
           // Add exercise to ordering if it's the first time we see it for this date
-          if (!exerciseByDateMap[date].exerciseOrdering.includes(exerciseId)) {
-            exerciseByDateMap[date].exerciseOrdering.push(exerciseId);
+          if (!dateToExerciseMap[date].exerciseOrdering.includes(exerciseId)) {
+            dateToExerciseMap[date].exerciseOrdering.push(exerciseId);
           }
 
           // Add set to exercise details
-          if (!exerciseByDateMap[date].exerciseDetails[exerciseId]) {
-            exerciseByDateMap[date].exerciseDetails[exerciseId] = [];
+          if (!dateToExerciseMap[date].exerciseDetails[exerciseId]) {
+            dateToExerciseMap[date].exerciseDetails[exerciseId] = [];
           }
 
-          exerciseByDateMap[date].exerciseDetails[exerciseId].push({
+          dateToExerciseMap[date].exerciseDetails[exerciseId].push({
             weight: item.metric_weight,
             reps: item.reps,
             comment: item.comment,
           });
         });
 
-        setExerciseByDate(exerciseByDateMap);
-        console.log("exerciseByDate data structure loaded:", exerciseByDateMap);
+        setDateToExercise(dateToExerciseMap);
+        console.log("dateToExercise data structure loaded:", dateToExerciseMap);
       } else {
-        setExerciseByDate({});
-        console.log("exerciseByDate data structure loaded: {}");
+        setDateToExercise({});
+        console.log("dateToExercise data structure loaded: {}");
       }
     } catch (err) {
-      console.error("Error loading exerciseByDate data:", err);
-      setExerciseByDate({});
+      console.error("Error loading dateToExercise data:", err);
+      setDateToExercise({});
     }
   }, [db]);
 
@@ -338,7 +338,7 @@ export default function WorkoutLogPage() {
             workoutDays={workoutDays}
             i18nMap={i18nMap}
             language={language}
-            exerciseByDate={exerciseByDate}
+            dateToExercise={dateToExercise}
           />
           <Box
             sx={{
@@ -371,6 +371,8 @@ export default function WorkoutLogPage() {
                   language={language}
                   i18nMap={i18nMap}
                   onCalendarOpen={() => setMobileCalendarOpen(true)}
+                  dateToExercise={dateToExercise}
+                  db={db}
                 />
               </Box>
             </Paper>
@@ -398,7 +400,7 @@ export default function WorkoutLogPage() {
           onMonthChange={handleMonthChange}
           workoutDays={workoutDays}
           language={language}
-          exerciseByDate={exerciseByDate}
+          dateToExercise={dateToExercise}
         />
       </Box>
     </Container>

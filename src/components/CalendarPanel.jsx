@@ -10,7 +10,7 @@ export default function CalendarPanel({
   workoutDays,
   i18nMap,
   language,
-  exerciseByDate,
+  dateToExercise,
 }) {
   const [hoveredDay, setHoveredDay] = useState(null);
   const [previewExercises, setPreviewExercises] = useState([]);
@@ -19,7 +19,7 @@ export default function CalendarPanel({
   const calendarBoxRef = useRef(null);
 
   useEffect(() => {
-    if (!hoveredDay || !exerciseByDate || !exerciseByDate[hoveredDay]) {
+    if (!hoveredDay || !dateToExercise || !dateToExercise[hoveredDay]) {
       setPreviewExercises([]);
       setPreviewLoading(false);
       setPreviewError(null);
@@ -29,8 +29,8 @@ export default function CalendarPanel({
     setPreviewError(null);
 
     try {
-      // Use the exerciseByDate data structure instead of querying the database
-      const dayData = exerciseByDate[hoveredDay];
+      // Use the dateToExercise data structure instead of querying the database
+      const dayData = dateToExercise[hoveredDay];
       if (dayData && dayData.exerciseOrdering) {
         setPreviewExercises(dayData.exerciseOrdering);
       } else {
@@ -41,7 +41,7 @@ export default function CalendarPanel({
       setPreviewError("Error loading exercises");
       setPreviewLoading(false);
     }
-  }, [hoveredDay, exerciseByDate]);
+  }, [hoveredDay, dateToExercise]);
 
   // Helper to get the display name for an exercise
   function getDisplayName(exerciseId) {
@@ -108,8 +108,8 @@ export default function CalendarPanel({
       >
         <Box sx={{ flex: 1, width: "100%", overflow: "auto", minHeight: 0 }}>
           {hoveredDay &&
-          exerciseByDate &&
-          exerciseByDate[hoveredDay] &&
+          dateToExercise &&
+          dateToExercise[hoveredDay] &&
           previewExercises.length > 0 ? (
             previewLoading ? (
               <Box sx={{ color: "text.secondary" }}>Loading...</Box>

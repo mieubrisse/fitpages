@@ -18,7 +18,6 @@ import { ChevronLeft, ChevronRight, CalendarToday } from "@mui/icons-material";
 import { format, parseISO } from "date-fns";
 import ExerciseHistoryPopout from "./ExerciseHistoryPopout";
 import { enUS, pt } from "date-fns/locale";
-import { useDatabase } from "../hooks/useDatabase";
 
 // Format a Date object as YYYY-MM-DD in local time
 function formatDateLocal(date) {
@@ -39,11 +38,11 @@ export default function DailyLog({
   language = "EN",
   i18nMap,
   onCalendarOpen,
+  dateToExercise,
+  db,
 }) {
   const [rows, setRows] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
-
-  const { db, loading, error } = useDatabase();
 
   // Select locale for date-fns
   const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
@@ -63,72 +62,37 @@ export default function DailyLog({
     comment: language && language.toLowerCase() === "pt" ? "Comentário" : "Comment",
   };
 
-  // Query for the selected date
+  // Use dateToExercise data structure for the selected date
   useEffect(() => {
-    if (!db) return;
+    if (!dateToExercise || !dateToExercise[selectedDate]) {
+      setRows([]);
+      return;
+    }
 
     try {
-      const query = `
-        SELECT 
-          t.date,
-          e._id AS exercise_id,
-          t.reps,
-          t.metric_weight,
-          c.comment AS comment,
-          t._id
-        FROM training_log t
-        LEFT JOIN exercise e ON t.exercise_id = e._id
-        LEFT JOIN Comment c ON c.owner_id = t._id
-        WHERE t.date = ?
-        ORDER BY t._id ASC;
-      `;
-      const result = db.exec(query, [selectedDate]);
-      if (result.length > 0) {
-        const data = result[0].values.map((row) => {
-          return {
-            date: row[0],
-            exercise_id: row[1],
-            reps: row[2],
-            metric_weight: row[3],
-            comment: row[4] ?? "",
-            id: row[5],
-          };
-        });
+      const dayData = dateToExercise[selectedDate];
+      const exerciseOrdering = dayData.exerciseOrdering;
+      const exerciseDetails = dayData.exerciseDetails;
 
-        // Track first appearance of each exercise
-        const exerciseFirstAppearance = new Map();
-        data.forEach((item, index) => {
-          if (!exerciseFirstAppearance.has(item.exercise_id)) {
-            exerciseFirstAppearance.set(item.exercise_id, index);
-          }
-        });
+      // Convert to the expected format for the component
+      const sortedData = exerciseOrdering.map((exerciseId) => ({
+        exerciseId,
+        items: exerciseDetails[exerciseId].map((set, index) => ({
+          date: selectedDate,
+          exercise_id: exerciseId,
+          reps: set.reps,
+          metric_weight: set.weight,
+          comment: set.comment,
+          id: index, // Using index as id since we don't have the original _id
+        })),
+      }));
 
-        // Group by exercise id
-        const groupedData = data.reduce((acc, item) => {
-          if (!acc[item.exercise_id]) {
-            acc[item.exercise_id] = [];
-          }
-          acc[item.exercise_id].push(item);
-          return acc;
-        }, {});
-
-        // Convert to array and sort by first appearance order
-        const sortedData = Object.entries(groupedData)
-          .sort(([exerciseA], [exerciseB]) => {
-            const firstA = exerciseFirstAppearance.get(Number(exerciseA));
-            const firstB = exerciseFirstAppearance.get(Number(exerciseB));
-            return firstA - firstB;
-          })
-          .map(([exerciseId, items]) => ({ exerciseId, items }));
-
-        setRows(sortedData);
-      } else {
-        setRows([]);
-      }
+      setRows(sortedData);
     } catch (err) {
-      console.error("Error querying database:", err);
+      console.error("Error processing dateToExercise data:", err);
+      setRows([]);
     }
-  }, [selectedDate, db]);
+  }, [selectedDate, dateToExercise]);
 
   // Navigation handlers
   const goToPrevDay = () => {
@@ -170,18 +134,6 @@ export default function DailyLog({
       return i18nMap[exerciseId]["en"];
     }
     return String(exerciseId);
-  }
-
-  if (loading) {
-    return <Box sx={{ p: 2, color: "grey.300" }}>{t.loading}</Box>;
-  }
-  if (error) {
-    return (
-      <Box sx={{ p: 2, color: "error.main" }}>
-        {t.error}
-        {error}
-      </Box>
-    );
   }
 
   return (
