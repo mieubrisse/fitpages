@@ -1,8 +1,12 @@
-# FitPages
+FitPages
+========
 
 A web app interface for viewing data exports from [Fitnotes](http://www.fitnotesapp.com/), the best app ever.
 
-## Development Setup
+Works on both desktop & mobile.
+
+Development Setup
+-----------------
 
 This project uses a devcontainer for consistent development environments.
 
@@ -14,15 +18,15 @@ This project uses a devcontainer for consistent development environments.
 ### Getting Started
 
 1. Clone this repository
-2. Open the project in VS Code
-3. When prompted, click "Reopen in Container" or use the command palette (`Cmd/Ctrl + Shift + P`) and select "Dev Containers: Reopen in Container"
-4. The container will build and install all dependencies automatically
-5. Copy `.env.example` to `.env` and add your Vercel Blob Store token:
+2. Copy the `.env.example` to `.env`
    ```bash
    cp .env.example .env
-   # Edit .env and replace 'your_blob_token_here' with your actual BLOB_READ_WRITE_TOKEN
    ```
-6. Once the container is ready, you can start development
+1. Fill out the `.env` file, using the comments in the file for guidance
+1. Open the project in VS Code
+1. When prompted, click "Reopen in Container" or use the command palette (`Cmd/Ctrl + Shift + P`) and select "Dev Containers: Reopen in Container"
+1. The container will build and install all dependencies automatically
+1. Once the container is ready, you can start development
 
 ### Available Scripts
 
@@ -36,7 +40,7 @@ Once the devcontainer is running, you'll have access to:
 
 ### Environment Variables
 
-This project requires the following environment variables:
+This project requires the following environment variables in your `.env` file:
 
 - `BLOB_READ_WRITE_TOKEN` - Your Vercel Blob Store read/write token for storing and retrieving the FitNotes database
 
@@ -48,7 +52,8 @@ This project requires the following environment variables:
 - **TypeScript** - Type safety
 - **Tailwind CSS** - Utility-first CSS framework (configured in devcontainer)
 
-## Running Tests
+Running Tests
+-------------
 
 To run the test suite with Vitest:
 
@@ -62,18 +67,8 @@ Or, for watch mode:
 npm test -- --watch
 ```
 
-## Project Structure
-
-```
-fitpages/
-├── .devcontainer/     # Devcontainer configuration
-├── src/              # Source code
-├── public/           # Static assets
-├── tests/            # Test files
-└── README.md         # This file
-```
-
-## Known Quirks
+Known Quirks
+------------
 
 - Records don't show beyond 15RM for now
 - The record-calculating algorithm is actually _more_ accurate than Fitnotes' in the case of a weight tie
