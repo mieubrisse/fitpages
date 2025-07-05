@@ -24,6 +24,7 @@ import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
 import ExerciseHistoryPopout from "../components/ExerciseHistoryPopout";
 import CalendarPanel from "../components/CalendarPanel";
+import MobileCalendarModal from "../components/MobileCalendarModal";
 import TopBannerBar from "../components/TopBannerBar";
 import { useDatabase } from "../hooks/useDatabase";
 
@@ -60,6 +61,7 @@ export default function WorkoutLogPage() {
     return localStorage.getItem("fitpages_language") || "EN";
   });
   const [i18nMap, setI18nMap] = useState({});
+  const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false);
 
   const { db, loading, error } = useDatabase();
 
@@ -300,6 +302,7 @@ export default function WorkoutLogPage() {
                   onDateSelect={selectDate}
                   language={language}
                   i18nMap={i18nMap}
+                  onCalendarOpen={() => setMobileCalendarOpen(true)}
                 />
               </Box>
             </Paper>
@@ -316,6 +319,18 @@ export default function WorkoutLogPage() {
             onDateSelect={selectDate}
           />
         )}
+
+        {/* Mobile Calendar Modal */}
+        <MobileCalendarModal
+          open={mobileCalendarOpen}
+          onClose={() => setMobileCalendarOpen(false)}
+          selectedDate={selectedDate}
+          onDateSelect={selectDate}
+          calendarMonth={calendarMonth}
+          onMonthChange={handleMonthChange}
+          workoutDays={workoutDays}
+          language={language}
+        />
       </Box>
     </Container>
   );

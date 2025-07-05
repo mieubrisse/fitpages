@@ -33,7 +33,13 @@ function parseDateLocal(str) {
   return new Date(year, month - 1, day);
 }
 
-export default function DailyLog({ selectedDate, onDateSelect, language = "EN", i18nMap }) {
+export default function DailyLog({
+  selectedDate,
+  onDateSelect,
+  language = "EN",
+  i18nMap,
+  onCalendarOpen,
+}) {
   const [rows, setRows] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
 
@@ -228,6 +234,7 @@ export default function DailyLog({ selectedDate, onDateSelect, language = "EN", 
               aria-label="Calendar"
               size="large"
               sx={{ display: { xs: "flex", md: "none" } }}
+              onClick={onCalendarOpen}
             >
               <CalendarToday />
             </IconButton>
