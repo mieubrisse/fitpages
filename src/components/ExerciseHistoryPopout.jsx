@@ -104,13 +104,7 @@ export default function ExerciseHistoryPopout({
   };
 
   const fetchChartData = async () => {
-    console.log("fetchChartData called:", { exerciseId, exerciseToDate });
-
     if (!exerciseId || !exerciseToDate) {
-      console.log("Missing data for chart:", {
-        hasExerciseId: !!exerciseId,
-        hasExerciseToDate: !!exerciseToDate,
-      });
       return;
     }
 
@@ -121,7 +115,6 @@ export default function ExerciseHistoryPopout({
       exerciseToDate[String(exerciseId)];
 
     if (!exerciseData) {
-      console.log("No exercise data found for chart ID:", exerciseId);
       return;
     }
 
@@ -129,7 +122,6 @@ export default function ExerciseHistoryPopout({
     try {
       const startDate = formatDateLocal(getTimeframeDate(timeframe));
       const endDate = formatDateLocal(new Date());
-      console.log("Chart timeframe:", { startDate, endDate, timeframe });
 
       const exerciseData = exerciseToDate[exerciseId];
       const dates = exerciseData.dates;
@@ -137,7 +129,6 @@ export default function ExerciseHistoryPopout({
 
       // Filter dates within the timeframe
       const filteredDates = dates.filter((date) => date >= startDate && date <= endDate);
-      console.log("Filtered dates for chart:", filteredDates);
 
       // Calculate max weight for each date
       const data = filteredDates.map((date) => {
@@ -149,10 +140,8 @@ export default function ExerciseHistoryPopout({
         };
       });
 
-      console.log("Chart data:", data);
       setChartData(data);
-    } catch (err) {
-      console.error("Error processing chart data from exerciseToDate:", err);
+    } catch {
       setChartData([]);
     } finally {
       setChartLoading(false);
@@ -178,18 +167,7 @@ export default function ExerciseHistoryPopout({
   };
 
   useEffect(() => {
-    console.log("ExerciseHistoryPopout useEffect triggered:", { exerciseId, exerciseToDate });
-    console.log("Exercise ID type:", typeof exerciseId);
-    console.log(
-      "Available exercise IDs in exerciseToDate:",
-      exerciseToDate ? Object.keys(exerciseToDate) : "No data"
-    );
-
     if (!exerciseId || !exerciseToDate) {
-      console.log("Missing data:", {
-        hasExerciseId: !!exerciseId,
-        hasExerciseToDate: !!exerciseToDate,
-      });
       setExerciseHistory([]);
       setLoading(false);
       return;
@@ -202,8 +180,6 @@ export default function ExerciseHistoryPopout({
       exerciseToDate[String(exerciseId)];
 
     if (!exerciseData) {
-      console.log("No exercise data found for ID:", exerciseId);
-      console.log("Available keys:", Object.keys(exerciseToDate));
       setExerciseHistory([]);
       setLoading(false);
       return;
@@ -211,8 +187,6 @@ export default function ExerciseHistoryPopout({
 
     setLoading(true);
     try {
-      console.log("Exercise data for ID", exerciseId, ":", exerciseData);
-
       const dates = exerciseData.dates;
       const exerciseDataByDate = exerciseData.exerciseData;
 
@@ -228,11 +202,9 @@ export default function ExerciseHistoryPopout({
         })),
       }));
 
-      console.log("Processed exercise history data:", sortedData);
       setExerciseHistory(sortedData);
       setLoading(false);
-    } catch (err) {
-      console.error("Error processing exerciseToDate data:", err);
+    } catch {
       setExerciseHistory([]);
       setLoading(false);
     }
