@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Paper,
@@ -16,6 +16,7 @@ import {
   Select,
   MenuItem,
   FormControl,
+  CircularProgress,
 } from "@mui/material";
 import { KeyboardArrowRight } from "@mui/icons-material";
 import { format, parseISO, subMonths } from "date-fns";
@@ -39,6 +40,10 @@ export default function ExerciseHistoryPopout({
   const [chartLoading, setChartLoading] = useState(false);
   const [timeframe, setTimeframe] = useState(3);
   const theme = useTheme();
+  const [historyChunkCount, setHistoryChunkCount] = useState(1);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const HISTORY_CHUNK_SIZE = 12;
+  const HISTORY_SCROLL_DEBOUNCE = 200; // ms
 
   // Select locale for date-fns
   const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
@@ -236,6 +241,66 @@ export default function ExerciseHistoryPopout({
     return String(id);
   }
 
+  // Helper to get sorted days (most recent first) and all sets for each day
+  function getSortedDaysWithSets(exerciseData) {
+    if (!exerciseData) return [];
+    const { dates, exerciseData: dataByDate } = exerciseData;
+    // Dates are already sorted descending (newest first)
+    return dates.map((date) => ({
+      date,
+      sets: dataByDate[date] || [],
+    }));
+  }
+
+  // Compute the flattened, sorted workouts for this exercise
+  const allDays =
+    exerciseToDate &&
+    (exerciseToDate[exerciseId] ||
+      exerciseToDate[Number(exerciseId)] ||
+      exerciseToDate[String(exerciseId)])
+      ? getSortedDaysWithSets(
+          exerciseToDate[exerciseId] ||
+            exerciseToDate[Number(exerciseId)] ||
+            exerciseToDate[String(exerciseId)]
+        )
+      : [];
+  const visibleDays = allDays.slice(0, historyChunkCount * HISTORY_CHUNK_SIZE);
+  const hasMoreDays = visibleDays.length < allDays.length;
+
+  // Reset chunk count when exercise changes
+  useEffect(() => {
+    setHistoryChunkCount(1);
+  }, [exerciseId]);
+
+  // Debounced scroll handler
+  const historyListRef = useRef();
+  const debounceTimeout = useRef();
+  const handleHistoryScroll = () => {
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(() => {
+      if (!historyListRef.current) return;
+      const { scrollTop, scrollHeight, clientHeight } = historyListRef.current;
+      if (scrollHeight - scrollTop - clientHeight < 200 && hasMoreDays && !isHistoryLoading) {
+        setIsHistoryLoading(true);
+        setTimeout(() => {
+          setHistoryChunkCount((c) => c + 1);
+          setIsHistoryLoading(false);
+        }, 400); // Simulate loading delay
+      }
+    }, HISTORY_SCROLL_DEBOUNCE);
+  };
+
+  // Attach scroll handler
+  useEffect(() => {
+    const el = historyListRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", handleHistoryScroll);
+    return () => {
+      el.removeEventListener("scroll", handleHistoryScroll);
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    };
+  }, [hasMoreDays, isHistoryLoading]);
+
   if (!exerciseId) return null;
 
   return (
@@ -345,46 +410,32 @@ export default function ExerciseHistoryPopout({
           }}
         >
           {activeTab === 0 && (
-            <>
-              {loading ? (
-                <Typography variant="body1" color="text.secondary">
-                  {i18nStaticStrings.loadingHistory}
-                </Typography>
-              ) : exerciseHistory.length === 0 ? (
-                <Typography variant="body1" color="text.secondary">
+            <Box
+              ref={historyListRef}
+              sx={{
+                maxHeight: 500,
+                overflowY: "auto",
+                pr: 1,
+                position: "relative",
+              }}
+            >
+              {visibleDays.length === 0 ? (
+                <Typography variant="body1" color="text.secondary" sx={{ p: 2 }}>
                   {i18nStaticStrings.noHistory}
                 </Typography>
               ) : (
-                exerciseHistory.map(({ date, items }) => (
+                visibleDays.map((day, idx) => (
                   <Paper
-                    key={date}
+                    key={day.date + "-" + idx}
                     elevation={4}
-                    sx={{
-                      mb: { xs: 2, md: 4 },
-                      borderRadius: 3,
-                      p: 2,
-                      bgcolor: "background.paper",
-                    }}
+                    sx={{ mb: 2, borderRadius: 3, p: 2, bgcolor: "background.paper" }}
                   >
                     <Typography
                       variant="h6"
-                      sx={{
-                        mb: 2,
-                        fontWeight: "bold",
-                        color: "text.primary",
-                        cursor: "pointer",
-                        "&:hover": {
-                          color: "primary.main",
-                          textDecoration: "underline",
-                        },
-                      }}
-                      onClick={() => {
-                        onDateSelect(date);
-                        onClose();
-                      }}
+                      sx={{ mb: 2, fontWeight: "bold", color: "text.primary" }}
                     >
                       {format(
-                        parseISO(date),
+                        parseISO(day.date),
                         language && language.toLowerCase() === "pt"
                           ? "ccc, d LLLL, yyyy"
                           : "EEE, MMMM d, yyyy",
@@ -403,7 +454,7 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: { xs: "33.33%", md: "12.5%" },
+                                width: { xs: "33.33%", md: "14.29%" },
                               }}
                             >
                               {i18nStaticStrings.set}
@@ -413,7 +464,7 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: { xs: "33.33%", md: "12.5%" },
+                                width: { xs: "33.33%", md: "14.29%" },
                               }}
                             >
                               {i18nStaticStrings.weight}
@@ -423,7 +474,7 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: { xs: "33.33%", md: "12.5%" },
+                                width: { xs: "33.33%", md: "14.29%" },
                               }}
                             >
                               {i18nStaticStrings.reps}
@@ -433,7 +484,7 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "left",
-                                width: "62.5%",
+                                width: "57.13%",
                                 display: { xs: "none", md: "table-cell" },
                               }}
                             >
@@ -442,8 +493,8 @@ export default function ExerciseHistoryPopout({
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {items.map((item, itemIndex) => (
-                            <TableRow key={itemIndex}>
+                          {day.sets.map((set, setIndex) => (
+                            <TableRow key={setIndex}>
                               <TableCell
                                 sx={{
                                   textAlign: "center",
@@ -451,23 +502,13 @@ export default function ExerciseHistoryPopout({
                                   fontWeight: "bold",
                                 }}
                               >
-                                {itemIndex + 1}
+                                {setIndex + 1}
                               </TableCell>
-                              <TableCell
-                                sx={{
-                                  textAlign: "center",
-                                  color: "text.primary",
-                                }}
-                              >
-                                {item.metric_weight} kg
+                              <TableCell sx={{ textAlign: "center", color: "text.primary" }}>
+                                {set.weight} kg
                               </TableCell>
-                              <TableCell
-                                sx={{
-                                  textAlign: "center",
-                                  color: "text.primary",
-                                }}
-                              >
-                                {item.reps}
+                              <TableCell sx={{ textAlign: "center", color: "text.primary" }}>
+                                {set.reps}
                               </TableCell>
                               <TableCell
                                 sx={{
@@ -477,7 +518,7 @@ export default function ExerciseHistoryPopout({
                                   display: { xs: "none", md: "table-cell" },
                                 }}
                               >
-                                {item.comment || ""}
+                                {set.comment || ""}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -487,7 +528,18 @@ export default function ExerciseHistoryPopout({
                   </Paper>
                 ))
               )}
-            </>
+              {isHistoryLoading && (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                  <CircularProgress size={32} thickness={4} />
+                </Box>
+              )}
+              {!hasMoreDays && visibleDays.length > 0 && (
+                <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
+                  {i18nStaticStrings.noHistory}{" "}
+                  {/* Or "All workouts loaded" if you want a different message */}
+                </Typography>
+              )}
+            </Box>
           )}
 
           {activeTab === 1 && (
