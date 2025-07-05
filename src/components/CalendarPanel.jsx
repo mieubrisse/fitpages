@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Box, Paper, Typography, Divider } from "@mui/material";
-import CustomDatePicker from "./CustomDatePicker";
+import WorkoutCalendar from "./WorkoutCalendar";
 
-export default function LogCalendar({
+export default function CalendarPanel({
   selectedDate,
   onDateSelect,
   calendarMonth,
@@ -92,7 +92,7 @@ export default function LogCalendar({
       ref={calendarBoxRef}
     >
       <Box sx={{ minHeight: 0 }}>
-        <CustomDatePicker
+        <WorkoutCalendar
           selectedDate={selectedDate}
           onDateSelect={onDateSelect}
           calendarMonth={calendarMonth}

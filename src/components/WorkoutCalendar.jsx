@@ -37,7 +37,7 @@ function CustomDay({ workoutDays, selectedDate, ...props }) {
   );
 }
 
-export default function CustomDatePicker({
+export default function WorkoutCalendar({
   selectedDate,
   onDateSelect,
   calendarMonth,

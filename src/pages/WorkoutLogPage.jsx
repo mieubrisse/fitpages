@@ -23,7 +23,7 @@ import {
 import { ArrowBack } from "@mui/icons-material";
 import DailyLog from "../components/DailyLog";
 import ExerciseHistoryPopout from "../components/ExerciseHistoryPopout";
-import LogCalendar from "../components/LogCalendar";
+import CalendarPanel from "../components/CalendarPanel";
 import TopBannerBar from "../components/TopBannerBar";
 import { useDatabase } from "../hooks/useDatabase";
 
@@ -260,7 +260,7 @@ export default function WorkoutLogPage() {
             overflow: "hidden",
           }}
         >
-          <LogCalendar
+          <CalendarPanel
             selectedDate={selectedDate}
             onDateSelect={selectDate}
             calendarMonth={calendarMonth}
