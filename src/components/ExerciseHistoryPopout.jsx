@@ -42,11 +42,15 @@ export default function ExerciseHistoryPopout({
   const theme = useTheme();
   const [historyChunkCount, setHistoryChunkCount] = useState(1);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [selectedChartPoint, setSelectedChartPoint] = useState(null);
   const HISTORY_CHUNK_SIZE = 12;
   const HISTORY_SCROLL_DEBOUNCE = 200; // ms
 
   // Select locale for date-fns
   const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
+
+  // Mobile detection
+  const isMobile = window.innerWidth < 768;
 
   // Translation map
   const i18nStaticStrings = {
@@ -533,16 +537,12 @@ export default function ExerciseHistoryPopout({
                 ))
               )}
               {isHistoryLoading && (
-                <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                <Box sx={{ display: "flex", justifyContent: "center", py: 2, pb: 4 }}>
                   <CircularProgress size={32} thickness={4} />
                 </Box>
               )}
-              {!hasMoreDays && visibleDays.length > 0 && (
-                <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                  {i18nStaticStrings.noHistory}{" "}
-                  {/* Or "All workouts loaded" if you want a different message */}
-                </Typography>
-              )}
+              {/* Add bottom padding only when there's more data to load */}
+              {hasMoreDays && <Box sx={{ pb: 6 }} />}
             </Box>
           )}
 
@@ -575,6 +575,7 @@ export default function ExerciseHistoryPopout({
                   </Typography>
                   <LineChart
                     height={350}
+                    skipAnimation={true}
                     series={[
                       {
                         data: chartData.map((point) => point.maxWeight),
