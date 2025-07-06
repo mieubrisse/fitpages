@@ -280,7 +280,14 @@ export default function ExerciseHistoryPopout({
     debounceTimeout.current = setTimeout(() => {
       if (!historyListRef.current) return;
       const { scrollTop, scrollHeight, clientHeight } = historyListRef.current;
-      if (scrollHeight - scrollTop - clientHeight < 200 && hasMoreDays && !isHistoryLoading) {
+      // Use a larger threshold for better reliability on all devices
+      const scrollThreshold = 400;
+
+      if (
+        scrollHeight - scrollTop - clientHeight < scrollThreshold &&
+        hasMoreDays &&
+        !isHistoryLoading
+      ) {
         setIsHistoryLoading(true);
         setTimeout(() => {
           setHistoryChunkCount((c) => c + 1);
@@ -403,6 +410,7 @@ export default function ExerciseHistoryPopout({
 
         {/* Content */}
         <Box
+          ref={historyListRef}
           sx={{
             flex: 1,
             overflow: "auto",
@@ -411,7 +419,6 @@ export default function ExerciseHistoryPopout({
         >
           {activeTab === 0 && (
             <Box
-              ref={historyListRef}
               sx={{
                 position: "relative",
               }}
