@@ -427,11 +427,6 @@ export default function WorkoutLogPage() {
             exerciseToDate={exerciseToDate}
           />
         )}
-        {console.log("ExerciseHistoryPopout render check:", {
-          selectedExercise,
-          hasExerciseToDate: !!exerciseToDate,
-          exerciseToDateKeys: exerciseToDate ? Object.keys(exerciseToDate) : [],
-        })}
 
         {/* Mobile Calendar Modal */}
         <MobileCalendarModal

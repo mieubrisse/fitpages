@@ -18,11 +18,12 @@ import {
   FormControl,
   CircularProgress,
 } from "@mui/material";
-import { KeyboardArrowRight } from "@mui/icons-material";
+import { KeyboardArrowRight, ChatBubbleOutline } from "@mui/icons-material";
 import { format, parseISO, subMonths } from "date-fns";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { useTheme } from "@mui/material/styles";
 import { enUS, pt } from "date-fns/locale";
+import CommentModal from "./CommentModal";
 
 export default function ExerciseHistoryPopout({
   exerciseId,
@@ -42,15 +43,23 @@ export default function ExerciseHistoryPopout({
   const theme = useTheme();
   const [historyChunkCount, setHistoryChunkCount] = useState(1);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-  const [selectedChartPoint, setSelectedChartPoint] = useState(null);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [selectedComment, setSelectedComment] = useState("");
   const HISTORY_CHUNK_SIZE = 12;
   const HISTORY_SCROLL_DEBOUNCE = 200; // ms
 
   // Select locale for date-fns
   const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
 
-  // Mobile detection
-  const isMobile = window.innerWidth < 768;
+  // Format weight to display cleanly (max 2 decimal places, remove trailing zeros)
+  const formatWeight = (weight) => {
+    if (weight === null || weight === undefined) return "0";
+    const rounded = Math.round(weight * 100) / 100; // Round to 2 decimal places
+    return rounded % 1 === 0 ? rounded.toString() : rounded.toString();
+  };
+
+  // Mobile detection - not currently used but kept for future reference
+  // const isMobile = window.innerWidth < 768;
 
   // Translation map
   const i18nStaticStrings = {
@@ -145,7 +154,7 @@ export default function ExerciseHistoryPopout({
         const maxWeight = Math.max(...sets.map((set) => set.weight));
         return {
           date,
-          maxWeight,
+          maxWeight: Math.round(maxWeight * 100) / 100, // Round to 2 decimal places
         };
       });
 
@@ -224,6 +233,16 @@ export default function ExerciseHistoryPopout({
     setTimeout(() => {
       onClose();
     }, 300); // Match the animation duration
+  };
+
+  const handleCommentClick = (comment) => {
+    setSelectedComment(comment || "");
+    setCommentModalOpen(true);
+  };
+
+  const handleCloseCommentModal = () => {
+    setCommentModalOpen(false);
+    setSelectedComment("");
   };
 
   // Helper to get the display name for an exercise
@@ -462,7 +481,8 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: { xs: "33.33%", md: "14.29%" },
+                                width: { xs: "25%", md: "12.5%" },
+                                px: { xs: 1, md: 2 },
                               }}
                             >
                               {i18nStaticStrings.set}
@@ -472,7 +492,8 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: { xs: "33.33%", md: "14.29%" },
+                                width: { xs: "25%", md: "12.5%" },
+                                px: { xs: 1, md: 2 },
                               }}
                             >
                               {i18nStaticStrings.weight}
@@ -482,7 +503,8 @@ export default function ExerciseHistoryPopout({
                                 color: "text.primary",
                                 fontWeight: "bold",
                                 textAlign: "center",
-                                width: { xs: "33.33%", md: "14.29%" },
+                                width: { xs: "25%", md: "12.5%" },
+                                px: { xs: 1, md: 2 },
                               }}
                             >
                               {i18nStaticStrings.reps}
@@ -491,8 +513,20 @@ export default function ExerciseHistoryPopout({
                               sx={{
                                 color: "text.primary",
                                 fontWeight: "bold",
+                                textAlign: "center",
+                                width: { xs: "15%", md: "12.5%" },
+                                display: { xs: "table-cell", md: "none" },
+                                px: { xs: 1, md: 2 },
+                              }}
+                            >
+                              {i18nStaticStrings.comment}
+                            </TableCell>
+                            <TableCell
+                              sx={{
+                                color: "text.primary",
+                                fontWeight: "bold",
                                 textAlign: "left",
-                                width: "57.13%",
+                                width: "62.5%",
                                 display: { xs: "none", md: "table-cell" },
                               }}
                             >
@@ -508,15 +542,52 @@ export default function ExerciseHistoryPopout({
                                   textAlign: "center",
                                   color: "text.primary",
                                   fontWeight: "bold",
+                                  px: { xs: 1, md: 2 },
                                 }}
                               >
                                 {setIndex + 1}
                               </TableCell>
-                              <TableCell sx={{ textAlign: "center", color: "text.primary" }}>
-                                {set.weight} kg
+                              <TableCell
+                                sx={{
+                                  textAlign: "center",
+                                  color: "text.primary",
+                                  px: { xs: 1, md: 2 },
+                                }}
+                              >
+                                {formatWeight(set.weight)} kg
                               </TableCell>
-                              <TableCell sx={{ textAlign: "center", color: "text.primary" }}>
+                              <TableCell
+                                sx={{
+                                  textAlign: "center",
+                                  color: "text.primary",
+                                  px: { xs: 1, md: 2 },
+                                }}
+                              >
                                 {set.reps}
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  textAlign: "center",
+                                  display: { xs: "table-cell", md: "none" },
+                                  px: { xs: 1, md: 2 },
+                                }}
+                              >
+                                {set.comment && (
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      color: "primary.main",
+                                      p: 0.5,
+                                      "&:hover": {
+                                        color: "primary.dark",
+                                        bgcolor: "action.hover",
+                                      },
+                                    }}
+                                    onClick={() => handleCommentClick(set.comment)}
+                                  >
+                                    <ChatBubbleOutline fontSize="small" />
+                                  </IconButton>
+                                )}
                               </TableCell>
                               <TableCell
                                 sx={{
@@ -524,6 +595,7 @@ export default function ExerciseHistoryPopout({
                                   color: "text.primary",
                                   wordBreak: "break-word",
                                   display: { xs: "none", md: "table-cell" },
+                                  px: { xs: 1, md: 2 },
                                 }}
                               >
                                 {set.comment || ""}
@@ -775,7 +847,7 @@ export default function ExerciseHistoryPopout({
                                       color: isImplied ? "text.secondary" : "text.primary",
                                     }}
                                   >
-                                    {parseFloat(weight).toFixed(1)}kg
+                                    {formatWeight(weight)}kg
                                   </TableCell>
                                   <TableCell
                                     sx={{
@@ -814,6 +886,13 @@ export default function ExerciseHistoryPopout({
           )}
         </Box>
       </Paper>
+
+      {/* Comment Modal */}
+      <CommentModal
+        open={commentModalOpen}
+        onClose={handleCloseCommentModal}
+        comment={selectedComment}
+      />
     </Box>
   );
 }

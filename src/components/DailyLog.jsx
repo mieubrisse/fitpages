@@ -14,9 +14,10 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { ChevronLeft, ChevronRight, CalendarToday } from "@mui/icons-material";
+import { ChevronLeft, ChevronRight, CalendarToday, ChatBubbleOutline } from "@mui/icons-material";
 import { format, parseISO } from "date-fns";
 import ExerciseHistoryPopout from "./ExerciseHistoryPopout";
+import CommentModal from "./CommentModal";
 import { enUS, pt } from "date-fns/locale";
 
 // Format a Date object as YYYY-MM-DD in local time
@@ -32,6 +33,13 @@ function parseDateLocal(str) {
   return new Date(year, month - 1, day);
 }
 
+// Format weight to display cleanly (max 2 decimal places, remove trailing zeros)
+function formatWeight(weight) {
+  if (weight === null || weight === undefined) return "0";
+  const rounded = Math.round(weight * 100) / 100; // Round to 2 decimal places
+  return rounded % 1 === 0 ? rounded.toString() : rounded.toString();
+}
+
 export default function DailyLog({
   selectedDate,
   onDateSelect,
@@ -43,6 +51,8 @@ export default function DailyLog({
 }) {
   const [rows, setRows] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [selectedComment, setSelectedComment] = useState("");
 
   // Select locale for date-fns
   const locale = language && language.toLowerCase() === "pt" ? pt : enUS;
@@ -116,6 +126,16 @@ export default function DailyLog({
 
   const handleCloseExercise = () => {
     setSelectedExercise(null);
+  };
+
+  const handleCommentClick = (comment) => {
+    setSelectedComment(comment || "");
+    setCommentModalOpen(true);
+  };
+
+  const handleCloseCommentModal = () => {
+    setCommentModalOpen(false);
+    setSelectedComment("");
   };
 
   // Helper to get the display name for an exercise
@@ -280,7 +300,8 @@ export default function DailyLog({
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: { xs: "33.33%", md: "12.5%" },
+                            width: { xs: "25%", md: "12.5%" },
+                            px: { xs: 1, md: 2 },
                           }}
                         >
                           {t.set}
@@ -290,7 +311,8 @@ export default function DailyLog({
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: { xs: "33.33%", md: "12.5%" },
+                            width: { xs: "25%", md: "12.5%" },
+                            px: { xs: 1, md: 2 },
                           }}
                         >
                           {t.weight}
@@ -300,10 +322,23 @@ export default function DailyLog({
                             color: "text.primary",
                             fontWeight: "bold",
                             textAlign: "center",
-                            width: { xs: "33.33%", md: "12.5%" },
+                            width: { xs: "25%", md: "12.5%" },
+                            px: { xs: 1, md: 2 },
                           }}
                         >
                           {t.reps}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            color: "text.primary",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            width: { xs: "15%", md: "12.5%" },
+                            display: { xs: "table-cell", md: "none" },
+                            px: { xs: 1, md: 2 },
+                          }}
+                        >
+                          {t.comment}
                         </TableCell>
                         <TableCell
                           sx={{
@@ -326,6 +361,7 @@ export default function DailyLog({
                               textAlign: "center",
                               color: "text.primary",
                               fontWeight: "bold",
+                              px: { xs: 1, md: 2 },
                             }}
                           >
                             {itemIndex + 1}
@@ -334,17 +370,43 @@ export default function DailyLog({
                             sx={{
                               textAlign: "center",
                               color: "text.primary",
+                              px: { xs: 1, md: 2 },
                             }}
                           >
-                            {item.metric_weight} kg
+                            {formatWeight(item.metric_weight)} kg
                           </TableCell>
                           <TableCell
                             sx={{
                               textAlign: "center",
                               color: "text.primary",
+                              px: { xs: 1, md: 2 },
                             }}
                           >
                             {item.reps}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              textAlign: "center",
+                              display: { xs: "table-cell", md: "none" },
+                              px: { xs: 1, md: 2 },
+                            }}
+                          >
+                            {item.comment && (
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: "primary.main",
+                                  p: 0.5,
+                                  "&:hover": {
+                                    color: "primary.dark",
+                                    bgcolor: "action.hover",
+                                  },
+                                }}
+                                onClick={() => handleCommentClick(item.comment)}
+                              >
+                                <ChatBubbleOutline fontSize="small" />
+                              </IconButton>
+                            )}
                           </TableCell>
                           <TableCell
                             sx={{
@@ -352,6 +414,7 @@ export default function DailyLog({
                               color: "text.primary",
                               wordBreak: "break-word",
                               display: { xs: "none", md: "table-cell" },
+                              px: { xs: 1, md: 2 },
                             }}
                           >
                             {item.comment || ""}
@@ -378,6 +441,13 @@ export default function DailyLog({
           exerciseToDate={exerciseToDate}
         />
       )}
+
+      {/* Comment Modal */}
+      <CommentModal
+        open={commentModalOpen}
+        onClose={handleCloseCommentModal}
+        comment={selectedComment}
+      />
     </Container>
   );
 }
