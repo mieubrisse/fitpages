@@ -632,9 +632,13 @@ export default function DailyLog({
                     position: "absolute",
                     top: 8,
                     right: 8,
-                    color: "#fff",
-                    bgcolor: "error.main",
-                    "&:hover": { bgcolor: "error.dark" },
+                    color: "#222",
+                    bgcolor: "#fff",
+                    transition: "background 0.2s, color 0.2s",
+                    "&:hover": {
+                      bgcolor: "error.main",
+                      color: "#fff",
+                    },
                   }}
                   aria-label={
                     language && language.toLowerCase() === "pt"
