@@ -577,10 +577,10 @@ export default function DailyLog({
                 color="primary"
                 size="large"
                 sx={{
-                  bgcolor: "primary.main",
-                  color: "#fff",
+                  bgcolor: "primary.light",
+                  color: (theme) => theme.palette.primary.contrastText,
                   boxShadow: 3,
-                  "&:hover": { bgcolor: "primary.dark" },
+                  "&:hover": { bgcolor: "primary.main", color: "#fff" },
                   width: 64,
                   height: 64,
                   borderRadius: "50%",
@@ -605,14 +605,24 @@ export default function DailyLog({
                   mb: { xs: 2, md: 4 },
                   borderRadius: 3,
                   p: 2,
-                  bgcolor: "primary.light",
-                  color: "primary.contrastText",
+                  bgcolor: "primary.main",
+                  color: "#fff",
                   position: "relative",
                 }}
               >
                 <Typography
                   variant="h6"
-                  sx={{ mb: 2, fontWeight: "bold", color: "primary.contrastText" }}
+                  sx={{
+                    mb: 2,
+                    fontWeight: "bold",
+                    color: "#fff",
+                    cursor: "pointer",
+                    "&:hover": {
+                      color: "primary.light",
+                      textDecoration: "underline",
+                    },
+                  }}
+                  onClick={() => handleExerciseClick(exerciseId)}
                 >
                   {getDisplayName(exerciseId)}
                 </Typography>
@@ -622,9 +632,9 @@ export default function DailyLog({
                     position: "absolute",
                     top: 8,
                     right: 8,
-                    color: "primary.contrastText",
-                    bgcolor: "primary.main",
-                    "&:hover": { bgcolor: "primary.dark" },
+                    color: "#fff",
+                    bgcolor: "error.main",
+                    "&:hover": { bgcolor: "error.dark" },
                   }}
                   aria-label={
                     language && language.toLowerCase() === "pt"
