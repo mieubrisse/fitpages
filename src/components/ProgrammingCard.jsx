@@ -9,8 +9,10 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  TextField,
 } from "@mui/material";
-import { Delete } from "@mui/icons-material";
+import { Delete, Add } from "@mui/icons-material";
+import InputAdornment from "@mui/material/InputAdornment";
 import { ChatBubbleOutline } from "@mui/icons-material";
 
 export default function ProgrammingCard({
@@ -23,6 +25,7 @@ export default function ProgrammingCard({
   language = "EN",
   sx = {},
   children,
+  onUpdateProgramming,
 }) {
   // Local translation map
   const t = {
@@ -32,12 +35,25 @@ export default function ProgrammingCard({
     comment: language && language.toLowerCase() === "pt" ? "Comentário" : "Comment",
   };
 
-  // Format weight to display cleanly (max 2 decimal places, remove trailing zeros)
-  function formatWeight(weight) {
-    if (weight === null || weight === undefined) return "0";
-    const rounded = Math.round(weight * 100) / 100;
-    return rounded % 1 === 0 ? rounded.toString() : rounded.toString();
-  }
+  // Handle adding a new row
+  const handleAddRow = () => {
+    const newRow = {
+      metric_weight: 0,
+      reps: 0,
+      comment: "",
+    };
+
+    // Add the new row to the programming data
+    const updatedItems = [...items, newRow];
+    onUpdateProgramming(exerciseId, updatedItems);
+  };
+
+  // Handle updating a field value
+  const handleFieldUpdate = (rowIndex, field, value) => {
+    const updatedItems = [...items];
+    updatedItems[rowIndex] = { ...updatedItems[rowIndex], [field]: value };
+    onUpdateProgramming(exerciseId, updatedItems);
+  };
 
   return (
     <Paper
@@ -149,6 +165,7 @@ export default function ProgrammingCard({
               >
                 {t.comment}
               </TableCell>
+              <TableCell />
             </TableRow>
           </TableHead>
           <TableBody>
@@ -173,7 +190,29 @@ export default function ProgrammingCard({
                       px: { xs: 1, md: 2 },
                     }}
                   >
-                    {formatWeight(item.metric_weight)} kg
+                    <TextField
+                      size="small"
+                      value={item.metric_weight || ""}
+                      onChange={(e) =>
+                        handleFieldUpdate(itemIndex, "metric_weight", e.target.value)
+                      }
+                      placeholder="kg"
+                      sx={{
+                        width: "100%",
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                        },
+                      }}
+                      slotProps={{
+                        input: {
+                          style: { textAlign: "center", height: 32, fontSize: "1rem" },
+                          inputMode: "decimal",
+                          step: "any",
+                          min: 0,
+                          pattern: "[0-9]*",
+                        },
+                      }}
+                    />
                   </TableCell>
                   <TableCell
                     sx={{
@@ -182,7 +221,39 @@ export default function ProgrammingCard({
                       px: { xs: 1, md: 2 },
                     }}
                   >
-                    {item.reps}
+                    <TextField
+                      size="small"
+                      value={item.reps || ""}
+                      onChange={(e) => handleFieldUpdate(itemIndex, "reps", e.target.value)}
+                      sx={{
+                        width: "100%",
+                        "& .MuiInputBase-root": {
+                          color: "text.primary",
+                          bgcolor: "action.hover",
+                          height: 32,
+                          minHeight: 0,
+                          fontSize: "1rem",
+                          boxSizing: "border-box",
+                          padding: 0,
+                        },
+                        "& .MuiInputBase-input": {
+                          textAlign: "center",
+                          height: 32,
+                          minHeight: 0,
+                          padding: 0,
+                          fontSize: "1rem",
+                        },
+                      }}
+                      slotProps={{
+                        input: {
+                          style: { textAlign: "center", height: 32, padding: 0, fontSize: "1rem" },
+                          inputMode: "numeric",
+                          step: 1,
+                          min: 0,
+                          pattern: "[0-9]*",
+                        },
+                      }}
+                    />
                   </TableCell>
                   <TableCell
                     sx={{
@@ -217,10 +288,102 @@ export default function ProgrammingCard({
                       px: { xs: 1, md: 2 },
                     }}
                   >
-                    {item.comment || ""}
+                    <TextField
+                      size="small"
+                      value={item.comment ?? ""}
+                      onChange={(e) => handleFieldUpdate(itemIndex, "comment", e.target.value)}
+                      sx={{
+                        width: "100%",
+                        "& .MuiInputBase-root": {
+                          color: "text.primary",
+                          bgcolor: "action.hover",
+                          height: 32,
+                          minHeight: 0,
+                          fontSize: "1rem",
+                          boxSizing: "border-box",
+                        },
+                        "& .MuiInputBase-input": {
+                          height: 32,
+                          minHeight: 0,
+                          fontSize: "1rem",
+                        },
+                      }}
+                      slotProps={{
+                        input: {
+                          style: { height: 32, fontSize: "1rem" },
+                        },
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell sx={{ textAlign: "center", width: 40 }}>
+                    <MuiIconButton
+                      size="small"
+                      color="error"
+                      onClick={() => {
+                        const updatedItems = items.filter((_, idx) => idx !== itemIndex);
+                        onUpdateProgramming(exerciseId, updatedItems);
+                      }}
+                      aria-label="Remove row"
+                    >
+                      <Delete fontSize="small" />
+                    </MuiIconButton>
                   </TableCell>
                 </TableRow>
               ))}
+            {/* Plus button row */}
+            <TableRow>
+              <TableCell
+                sx={{
+                  textAlign: "center",
+                  color: "text.primary",
+                  fontWeight: "bold",
+                  px: { xs: 1, md: 2 },
+                }}
+              >
+                {items.length + 1}
+              </TableCell>
+              <TableCell
+                sx={{
+                  textAlign: "center",
+                  px: { xs: 1, md: 2 },
+                }}
+              >
+                <MuiIconButton
+                  size="small"
+                  onClick={handleAddRow}
+                  sx={{
+                    color: "text.primary",
+                    bgcolor: "action.hover",
+                    "&:hover": {
+                      bgcolor: "primary.light",
+                      color: "primary.contrastText",
+                    },
+                  }}
+                >
+                  <Add fontSize="small" />
+                </MuiIconButton>
+              </TableCell>
+              <TableCell
+                sx={{
+                  textAlign: "center",
+                  px: { xs: 1, md: 2 },
+                }}
+              />
+              <TableCell
+                sx={{
+                  textAlign: "center",
+                  display: { xs: "table-cell", md: "none" },
+                  px: { xs: 1, md: 2 },
+                }}
+              />
+              <TableCell
+                sx={{
+                  textAlign: "left",
+                  display: { xs: "none", md: "table-cell" },
+                  px: { xs: 1, md: 2 },
+                }}
+              />
+            </TableRow>
           </TableBody>
         </Table>
       </TableContainer>
