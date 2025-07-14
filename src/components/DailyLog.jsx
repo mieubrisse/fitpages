@@ -39,6 +39,7 @@ import CommentModal from "./CommentModal";
 import { enUS, pt } from "date-fns/locale";
 import ProgrammingCard from "./ProgrammingCard";
 import TrainingCard from "./TrainingCard";
+import WorkoutCommentCard from "./WorkoutCommentCard";
 
 // Format a Date object as YYYY-MM-DD in local time
 function formatDateLocal(date) {
@@ -61,6 +62,7 @@ export default function DailyLog({
   onCalendarOpen,
   dateToExercise,
   exerciseToDate,
+  workoutComment = "",
 }) {
   const [rows, setRows] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -386,6 +388,8 @@ export default function DailyLog({
             position: "relative", // For floating button positioning
           }}
         >
+          {/* Workout Comment Card: show first if exists */}
+          {workoutComment && <WorkoutCommentCard comment={workoutComment} language={language} />}
           {rows.length > 0
             ? rows.map(({ exerciseId, items }) => (
                 <TrainingCard

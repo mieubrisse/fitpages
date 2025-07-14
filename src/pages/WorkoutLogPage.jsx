@@ -64,6 +64,7 @@ export default function WorkoutLogPage() {
   const [mobileCalendarOpen, setMobileCalendarOpen] = useState(false);
   const [dateToExercise, setDateToExercise] = useState({});
   const [exerciseToDate, setExerciseToDate] = useState({});
+  const [dateToWorkoutComment, setDateToWorkoutComment] = useState({});
 
   const { db, loading, error } = useDatabase();
 
@@ -229,6 +230,29 @@ export default function WorkoutLogPage() {
       console.error("Error loading dateToExercise data:", err);
       setDateToExercise({});
       setExerciseToDate({});
+    }
+  }, [db]);
+
+  // Fetch all workout comments and build dateToWorkoutComment mapping
+  useEffect(() => {
+    if (!db) return;
+    try {
+      const result = db.exec(`SELECT date, comment FROM WorkoutComment ORDER BY date ASC;`);
+      if (result.length > 0) {
+        const data = result[0].values;
+        const mapping = {};
+        data.forEach(([date, comment]) => {
+          if (date && comment) {
+            mapping[date] = comment;
+          }
+        });
+        setDateToWorkoutComment(mapping);
+      } else {
+        setDateToWorkoutComment({});
+      }
+    } catch (err) {
+      console.error("Error loading WorkoutComment data:", err);
+      setDateToWorkoutComment({});
     }
   }, [db]);
 
@@ -411,6 +435,7 @@ export default function WorkoutLogPage() {
                   dateToExercise={dateToExercise}
                   exerciseToDate={exerciseToDate}
                   db={db}
+                  workoutComment={dateToWorkoutComment[selectedDate] || ""}
                 />
               </Box>
             </Paper>
