@@ -15,6 +15,23 @@ import { Delete, Add } from "@mui/icons-material";
 import InputAdornment from "@mui/material/InputAdornment";
 import { ChatBubbleOutline } from "@mui/icons-material";
 import { useMemo } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 
 export default function ProgrammingCard({
   exerciseId,
@@ -28,14 +45,6 @@ export default function ProgrammingCard({
   children,
   onUpdateProgramming,
 }) {
-  // Local translation map
-  const t = {
-    set: language && language.toLowerCase() === "pt" ? "Série" : "Set",
-    weight: language && language.toLowerCase() === "pt" ? "Peso" : "Weight",
-    reps: language && language.toLowerCase() === "pt" ? "Reps" : "Reps",
-    comment: language && language.toLowerCase() === "pt" ? "Comentário" : "Comment",
-  };
-
   // Helper: is a set empty?
   const isEmptySet = (set) => {
     return (
@@ -92,6 +101,216 @@ export default function ProgrammingCard({
     onUpdateProgramming(exerciseId, toSave);
   };
 
+  // Handle drag end
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      // Get the real sets (excluding ghost set)
+      const realSetsOnly = realSets.filter((_, index) => index !== realSets.length - 1);
+      const oldIndex = parseInt(active.id.split("-")[1]);
+      const newIndex = parseInt(over.id.split("-")[1]);
+
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const newOrder = arrayMove(realSetsOnly, oldIndex, newIndex);
+        onUpdateProgramming(exerciseId, newOrder);
+      }
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Sortable row component
+  const SortableTableRow = ({ item, itemIndex, isGhost }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+      id: isGhost ? `ghost-${itemIndex}` : `set-${itemIndex}`,
+      disabled: isGhost,
+    });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <TableRow ref={setNodeRef} style={style}>
+        <TableCell
+          sx={{
+            textAlign: "center",
+            color: "text.primary",
+            fontWeight: "bold",
+            px: { xs: 1, md: 2 },
+            opacity: isGhost ? 0.4 : 1,
+            cursor: isGhost ? "default" : "grab",
+            "&:active": {
+              cursor: isGhost ? "default" : "grabbing",
+            },
+          }}
+          {...(!isGhost ? { ...attributes, ...listeners } : {})}
+        >
+          {itemIndex + 1}
+        </TableCell>
+        <TableCell
+          sx={{
+            textAlign: "center",
+            color: "text.primary",
+            px: { xs: 1, md: 2 },
+          }}
+        >
+          <TextField
+            size="small"
+            value={item.metric_weight || ""}
+            onChange={(e) => handleFieldUpdate(itemIndex, "metric_weight", e.target.value)}
+            placeholder="kg"
+            sx={{
+              width: "100%",
+              "& .MuiInputBase-input": {
+                textAlign: "center",
+              },
+            }}
+            slotProps={{
+              input: {
+                style: { textAlign: "center", height: 32, fontSize: "1rem" },
+                inputMode: "decimal",
+                step: "any",
+                min: 0,
+                pattern: "[0-9]*",
+              },
+            }}
+          />
+        </TableCell>
+        <TableCell
+          sx={{
+            textAlign: "center",
+            color: "text.primary",
+            px: { xs: 1, md: 2 },
+          }}
+        >
+          <TextField
+            size="small"
+            value={item.reps || ""}
+            onChange={(e) => handleFieldUpdate(itemIndex, "reps", e.target.value)}
+            sx={{
+              width: "100%",
+              "& .MuiInputBase-root": {
+                color: "text.primary",
+                bgcolor: "action.hover",
+                height: 32,
+                minHeight: 0,
+                fontSize: "1rem",
+                boxSizing: "border-box",
+                padding: 0,
+              },
+              "& .MuiInputBase-input": {
+                textAlign: "center",
+                height: 32,
+                minHeight: 0,
+                padding: 0,
+                fontSize: "1rem",
+              },
+            }}
+            slotProps={{
+              input: {
+                style: { textAlign: "center", height: 32, padding: 0, fontSize: "1rem" },
+                inputMode: "numeric",
+                step: 1,
+                min: 0,
+                pattern: "[0-9]*",
+              },
+            }}
+          />
+        </TableCell>
+        <TableCell
+          sx={{
+            textAlign: "center",
+            display: { xs: "table-cell", md: "none" },
+            px: { xs: 1, md: 2 },
+          }}
+        >
+          {item.comment && (
+            <MuiIconButton
+              size="small"
+              sx={{
+                color: "#fff",
+                p: 0.5,
+                "&:hover": {
+                  color: "primary.light",
+                  bgcolor: "action.hover",
+                },
+              }}
+              onClick={() => onCommentClick && onCommentClick(item.comment)}
+            >
+              <ChatBubbleOutline fontSize="small" />
+            </MuiIconButton>
+          )}
+        </TableCell>
+        <TableCell
+          sx={{
+            textAlign: "left",
+            color: "text.primary",
+            wordBreak: "break-word",
+            display: { xs: "none", md: "table-cell" },
+            px: { xs: 1, md: 2 },
+          }}
+        >
+          <TextField
+            size="small"
+            value={item.comment ?? ""}
+            onChange={(e) => handleFieldUpdate(itemIndex, "comment", e.target.value)}
+            sx={{
+              width: "100%",
+              "& .MuiInputBase-root": {
+                color: "text.primary",
+                bgcolor: "action.hover",
+                height: 32,
+                minHeight: 0,
+                fontSize: "1rem",
+                boxSizing: "border-box",
+              },
+              "& .MuiInputBase-input": {
+                height: 32,
+                minHeight: 0,
+                fontSize: "1rem",
+              },
+            }}
+            slotProps={{
+              input: {
+                style: { height: 32, fontSize: "1rem" },
+              },
+            }}
+          />
+        </TableCell>
+        <TableCell sx={{ textAlign: "center", width: 40 }}>
+          {!isGhost && (
+            <MuiIconButton
+              size="small"
+              sx={{
+                position: "relative",
+                color: "#222",
+                bgcolor: "#fff",
+                transition: "background 0.2s, color 0.2s",
+                "&:hover": {
+                  bgcolor: "error.main",
+                  color: "#fff",
+                },
+              }}
+              onClick={() => handleDeleteRow(itemIndex)}
+              aria-label="Remove row"
+            >
+              <Delete fontSize="small" />
+            </MuiIconButton>
+          )}
+        </TableCell>
+      </TableRow>
+    );
+  };
+
   return (
     <Paper
       elevation={4}
@@ -102,6 +321,7 @@ export default function ProgrammingCard({
         bgcolor: "primary.main",
         color: "text.primary",
         position: "relative",
+        overflow: "hidden", // Prevent expansion during drag
         ...sx,
       }}
     >
@@ -142,242 +362,105 @@ export default function ProgrammingCard({
       >
         <Delete fontSize="small" />
       </MuiIconButton>
-      <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2 }}>
-        <Table size="small">
+      <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2, overflow: "hidden" }}>
+        <Table sx={{ minWidth: 650, tableLayout: "fixed" }} aria-label="programming table">
           <TableHead>
             <TableRow>
               <TableCell
                 sx={{
+                  textAlign: "center",
                   color: "text.primary",
                   fontWeight: "bold",
-                  textAlign: "center",
-                  width: { xs: "25%", md: "12.5%" },
                   px: { xs: 1, md: 2 },
+                  width: "60px",
                 }}
               >
-                {t.set}
+                #
               </TableCell>
               <TableCell
                 sx={{
+                  textAlign: "center",
                   color: "text.primary",
                   fontWeight: "bold",
-                  textAlign: "center",
-                  width: { xs: "25%", md: "12.5%" },
                   px: { xs: 1, md: 2 },
                 }}
               >
-                {t.weight}
+                {language === "PT" ? "Peso" : "Weight"}
               </TableCell>
               <TableCell
                 sx={{
+                  textAlign: "center",
                   color: "text.primary",
                   fontWeight: "bold",
-                  textAlign: "center",
-                  width: { xs: "25%", md: "12.5%" },
                   px: { xs: 1, md: 2 },
                 }}
               >
-                {t.reps}
+                {language === "PT" ? "Reps" : "Reps"}
               </TableCell>
               <TableCell
                 sx={{
+                  textAlign: "center",
                   color: "text.primary",
                   fontWeight: "bold",
-                  textAlign: "center",
-                  width: { xs: "15%", md: "12.5%" },
-                  display: { xs: "table-cell", md: "none" },
                   px: { xs: 1, md: 2 },
                 }}
               >
-                {t.comment}
+                {language === "PT" ? "Comentário" : "Comment"}
               </TableCell>
               <TableCell
                 sx={{
+                  textAlign: "center",
                   color: "text.primary",
                   fontWeight: "bold",
-                  textAlign: "left",
-                  width: "62.5%",
-                  display: { xs: "none", md: "table-cell" },
+                  px: { xs: 1, md: 2 },
+                  width: "60px",
                 }}
               >
-                {t.comment}
+                {language === "PT" ? "Ação" : "Action"}
               </TableCell>
-              <TableCell />
             </TableRow>
           </TableHead>
-          <TableBody>
-            {realSets.map((item, itemIndex) => {
-              const isGhost = itemIndex === realSets.length - 1 && isEmptySet(item);
-              return (
-                <TableRow key={itemIndex}>
-                  <TableCell
-                    sx={{
-                      textAlign: "center",
-                      color: "text.primary",
-                      fontWeight: "bold",
-                      px: { xs: 1, md: 2 },
-                      opacity: isGhost ? 0.4 : 1,
-                    }}
-                  >
-                    {itemIndex + 1}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      textAlign: "center",
-                      color: "text.primary",
-                      px: { xs: 1, md: 2 },
-                    }}
-                  >
-                    <TextField
-                      size="small"
-                      value={item.metric_weight || ""}
-                      onChange={(e) =>
-                        handleFieldUpdate(itemIndex, "metric_weight", e.target.value)
-                      }
-                      placeholder="kg"
-                      sx={{
-                        width: "100%",
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                        },
-                      }}
-                      slotProps={{
-                        input: {
-                          style: { textAlign: "center", height: 32, fontSize: "1rem" },
-                          inputMode: "decimal",
-                          step: "any",
-                          min: 0,
-                          pattern: "[0-9]*",
-                        },
-                      }}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          >
+            <TableBody
+              sx={{
+                // Prevent scrolling during drag operations
+                "& [data-dragging='true']": {
+                  overflow: "hidden !important",
+                },
+                // Ensure the table body doesn't expand during drag
+                "& .MuiTableRow-root": {
+                  "&[data-dragging='true']": {
+                    position: "relative",
+                    zIndex: 1000,
+                  },
+                },
+              }}
+            >
+              <SortableContext
+                items={realSets.map((_, index) =>
+                  index === realSets.length - 1 ? `ghost-${index}` : `set-${index}`
+                )}
+                strategy={verticalListSortingStrategy}
+              >
+                {realSets.map((item, itemIndex) => {
+                  const isGhost = itemIndex === realSets.length - 1 && isEmptySet(item);
+                  return (
+                    <SortableTableRow
+                      key={itemIndex}
+                      item={item}
+                      itemIndex={itemIndex}
+                      isGhost={isGhost}
                     />
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      textAlign: "center",
-                      color: "text.primary",
-                      px: { xs: 1, md: 2 },
-                    }}
-                  >
-                    <TextField
-                      size="small"
-                      value={item.reps || ""}
-                      onChange={(e) => handleFieldUpdate(itemIndex, "reps", e.target.value)}
-                      sx={{
-                        width: "100%",
-                        "& .MuiInputBase-root": {
-                          color: "text.primary",
-                          bgcolor: "action.hover",
-                          height: 32,
-                          minHeight: 0,
-                          fontSize: "1rem",
-                          boxSizing: "border-box",
-                          padding: 0,
-                        },
-                        "& .MuiInputBase-input": {
-                          textAlign: "center",
-                          height: 32,
-                          minHeight: 0,
-                          padding: 0,
-                          fontSize: "1rem",
-                        },
-                      }}
-                      slotProps={{
-                        input: {
-                          style: { textAlign: "center", height: 32, padding: 0, fontSize: "1rem" },
-                          inputMode: "numeric",
-                          step: 1,
-                          min: 0,
-                          pattern: "[0-9]*",
-                        },
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      textAlign: "center",
-                      display: { xs: "table-cell", md: "none" },
-                      px: { xs: 1, md: 2 },
-                    }}
-                  >
-                    {item.comment && (
-                      <MuiIconButton
-                        size="small"
-                        sx={{
-                          color: "#fff",
-                          p: 0.5,
-                          "&:hover": {
-                            color: "primary.light",
-                            bgcolor: "action.hover",
-                          },
-                        }}
-                        onClick={() => onCommentClick && onCommentClick(item.comment)}
-                      >
-                        <ChatBubbleOutline fontSize="small" />
-                      </MuiIconButton>
-                    )}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      textAlign: "left",
-                      color: "text.primary",
-                      wordBreak: "break-word",
-                      display: { xs: "none", md: "table-cell" },
-                      px: { xs: 1, md: 2 },
-                    }}
-                  >
-                    <TextField
-                      size="small"
-                      value={item.comment ?? ""}
-                      onChange={(e) => handleFieldUpdate(itemIndex, "comment", e.target.value)}
-                      sx={{
-                        width: "100%",
-                        "& .MuiInputBase-root": {
-                          color: "text.primary",
-                          bgcolor: "action.hover",
-                          height: 32,
-                          minHeight: 0,
-                          fontSize: "1rem",
-                          boxSizing: "border-box",
-                        },
-                        "& .MuiInputBase-input": {
-                          height: 32,
-                          minHeight: 0,
-                          fontSize: "1rem",
-                        },
-                      }}
-                      slotProps={{
-                        input: {
-                          style: { height: 32, fontSize: "1rem" },
-                        },
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ textAlign: "center", width: 40 }}>
-                    {!isGhost && (
-                      <MuiIconButton
-                        size="small"
-                        sx={{
-                          position: "relative",
-                          color: "#222",
-                          bgcolor: "#fff",
-                          transition: "background 0.2s, color 0.2s",
-                          "&:hover": {
-                            bgcolor: "error.main",
-                            color: "#fff",
-                          },
-                        }}
-                        onClick={() => handleDeleteRow(itemIndex)}
-                        aria-label="Remove row"
-                      >
-                        <Delete fontSize="small" />
-                      </MuiIconButton>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
+                  );
+                })}
+              </SortableContext>
+            </TableBody>
+          </DndContext>
         </Table>
       </TableContainer>
       {children}
