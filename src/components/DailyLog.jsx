@@ -259,6 +259,21 @@ export default function DailyLog({
     handleCloseDeleteDialog();
   };
 
+  // Handle updating programming for a specific exercise
+  const handleUpdateProgramming = (exerciseId, updatedItems) => {
+    setDateToProgramming((prev) => {
+      const prevDay = prev[selectedDate] || { exerciseOrdering: [], exerciseDetails: {} };
+      const newDetails = { ...prevDay.exerciseDetails, [exerciseId]: updatedItems };
+      return {
+        ...prev,
+        [selectedDate]: {
+          exerciseOrdering: prevDay.exerciseOrdering,
+          exerciseDetails: newDetails,
+        },
+      };
+    });
+  };
+
   // Helper to get the display name for an exercise
   function getDisplayName(exerciseId) {
     if (
@@ -457,6 +472,8 @@ export default function DailyLog({
                 getDisplayName={getDisplayName}
                 onExerciseClick={handleExerciseClick}
                 onDelete={handleOpenDeleteDialog}
+                onUpdateProgramming={handleUpdateProgramming}
+                items={programmingForDay.exerciseDetails[exerciseId] || []}
                 language={language}
               />
             ))}
