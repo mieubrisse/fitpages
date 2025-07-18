@@ -6,14 +6,17 @@ import { format, parseISO } from "date-fns";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import { enUS, pt } from "date-fns/locale";
 
-function CustomDay({ workoutDays, selectedDate, ...props }) {
+function CustomDay({ workoutDays, programmingDays, selectedDate, ...props }) {
   const dateStr = format(props.day, "yyyy-MM-dd");
   const hasWorkout = workoutDays.includes(dateStr);
+  const hasProgramming = programmingDays && programmingDays.includes(dateStr);
   const isSelected = dateStr === selectedDate;
+
   return (
     <PickersDay
       {...props}
       sx={{
+        // Training data takes highest priority
         ...(hasWorkout && {
           backgroundColor: (theme) => theme.palette.action.selected,
           color: (theme) => theme.palette.text.primary,
@@ -21,17 +24,41 @@ function CustomDay({ workoutDays, selectedDate, ...props }) {
             backgroundColor: (theme) => theme.palette.action.hover,
           },
         }),
-        ...(isSelected && {
-          backgroundColor: (theme) => theme.palette.primary.main,
-          color: (theme) => theme.palette.primary.contrastText,
-          fontWeight: "bold",
-          borderRadius: "50%",
-          boxShadow: 3,
-          "&:hover": {
-            backgroundColor: (theme) => theme.palette.primary.dark,
+        // Programming scheduled days (blue circle)
+        ...(hasProgramming &&
+          !hasWorkout && {
+            backgroundColor: (theme) => theme.palette.primary.main,
             color: (theme) => theme.palette.primary.contrastText,
-          },
-        }),
+            fontWeight: "bold",
+            borderRadius: "50%",
+            boxShadow: 3,
+            "&:hover": {
+              backgroundColor: (theme) => theme.palette.primary.dark,
+              color: (theme) => theme.palette.primary.contrastText,
+            },
+          }),
+        // Selected day (white circle) - only if not training data or programming
+        ...(isSelected &&
+          !hasWorkout &&
+          !hasProgramming && {
+            backgroundColor: "#fff",
+            color: (theme) => theme.palette.text.primary,
+            fontWeight: "bold",
+            borderRadius: "50%",
+            boxShadow: 3,
+            "&:hover": {
+              backgroundColor: (theme) => theme.palette.action.hover,
+            },
+          }),
+        // Ensure today border shows
+        "&.MuiPickersDay-today": {
+          borderColor: "primary.main",
+        },
+        // Override Material-UI selected styling with !important
+        "&.Mui-selected": {
+          backgroundColor: "#fff !important",
+          color: "text.primary !important",
+        },
       }}
     />
   );
@@ -43,6 +70,7 @@ export default function WorkoutCalendar({
   calendarMonth,
   onMonthChange,
   workoutDays = [],
+  programmingDays = [],
   language = "EN",
   showHoverPreview = false,
   onDayHover,
@@ -71,6 +99,7 @@ export default function WorkoutCalendar({
               <CustomDay
                 {...props}
                 workoutDays={workoutDays}
+                programmingDays={programmingDays}
                 selectedDate={selectedDate}
                 onMouseEnter={
                   showHoverPreview ? () => onDayHover?.(format(props.day, "yyyy-MM-dd")) : undefined
@@ -85,10 +114,6 @@ export default function WorkoutCalendar({
             color: "text.primary",
             "& .MuiPickersDay-root": {
               color: "text.primary",
-              "&.Mui-selected": {
-                backgroundColor: "primary.main",
-                color: "primary.contrastText",
-              },
               "&.MuiPickersDay-today": {
                 borderColor: "primary.main",
               },
