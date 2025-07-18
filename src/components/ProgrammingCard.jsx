@@ -14,6 +14,7 @@ import {
 import { Delete, Add } from "@mui/icons-material";
 import InputAdornment from "@mui/material/InputAdornment";
 import { ChatBubbleOutline } from "@mui/icons-material";
+import { useMemo } from "react";
 
 export default function ProgrammingCard({
   exerciseId,
@@ -35,24 +36,60 @@ export default function ProgrammingCard({
     comment: language && language.toLowerCase() === "pt" ? "Comentário" : "Comment",
   };
 
-  // Handle adding a new row
-  const handleAddRow = () => {
-    const newRow = {
-      metric_weight: 0,
-      reps: 0,
-      comment: "",
-    };
-
-    // Add the new row to the programming data
-    const updatedItems = [...items, newRow];
-    onUpdateProgramming(exerciseId, updatedItems);
+  // Helper: is a set empty?
+  const isEmptySet = (set) => {
+    return (
+      (!set.metric_weight || set.metric_weight === "" || set.metric_weight === 0) &&
+      (!set.reps || set.reps === "" || set.reps === 0) &&
+      (!set.comment || set.comment === "")
+    );
   };
+
+  // Track real sets and always append a ghost set
+  const realSets = useMemo(() => {
+    // Any set the user has ever entered data into is a real set (unless deleted)
+    // Only the last empty set is the ghost set
+    // Remove trailing empty sets except one
+    let trimmed = [...items];
+    // Remove trailing empty sets
+    while (trimmed.length > 0 && isEmptySet(trimmed[trimmed.length - 1])) {
+      trimmed.pop();
+    }
+    // Always show at least one empty set (ghost set)
+    return trimmed.length === 0
+      ? [{ metric_weight: "", reps: "", comment: "" }]
+      : [...trimmed, { metric_weight: "", reps: "", comment: "" }];
+  }, [items]);
 
   // Handle updating a field value
   const handleFieldUpdate = (rowIndex, field, value) => {
-    const updatedItems = [...items];
+    let updatedItems = [...items];
+    // If editing the ghost set (last row), add a new real set
+    const editingGhost = rowIndex === realSets.length - 1;
+    if (editingGhost) {
+      // Add the ghost set as a real set, then append a new ghost set
+      updatedItems = [...items, { metric_weight: "", reps: "", comment: "" }];
+    }
+    // Update the value
     updatedItems[rowIndex] = { ...updatedItems[rowIndex], [field]: value };
-    onUpdateProgramming(exerciseId, updatedItems);
+    // Only pass real sets (exclude the last ghost set if empty)
+    let toSave = [...updatedItems];
+    // Remove trailing empty sets
+    while (toSave.length > 0 && isEmptySet(toSave[toSave.length - 1])) {
+      toSave.pop();
+    }
+    onUpdateProgramming(exerciseId, toSave);
+  };
+
+  // Handle deleting a set
+  const handleDeleteRow = (rowIndex) => {
+    const updatedItems = items.filter((_, idx) => idx !== rowIndex);
+    // Only pass real sets (exclude trailing ghost set)
+    let toSave = [...updatedItems];
+    while (toSave.length > 0 && isEmptySet(toSave[toSave.length - 1])) {
+      toSave.pop();
+    }
+    onUpdateProgramming(exerciseId, toSave);
   };
 
   return (
@@ -169,9 +206,9 @@ export default function ProgrammingCard({
             </TableRow>
           </TableHead>
           <TableBody>
-            {items &&
-              items.length > 0 &&
-              items.map((item, itemIndex) => (
+            {realSets.map((item, itemIndex) => {
+              const isGhost = itemIndex === realSets.length - 1 && isEmptySet(item);
+              return (
                 <TableRow key={itemIndex}>
                   <TableCell
                     sx={{
@@ -179,6 +216,7 @@ export default function ProgrammingCard({
                       color: "text.primary",
                       fontWeight: "bold",
                       px: { xs: 1, md: 2 },
+                      opacity: isGhost ? 0.4 : 1,
                     }}
                   >
                     {itemIndex + 1}
@@ -316,74 +354,29 @@ export default function ProgrammingCard({
                     />
                   </TableCell>
                   <TableCell sx={{ textAlign: "center", width: 40 }}>
-                    <MuiIconButton
-                      size="small"
-                      color="error"
-                      onClick={() => {
-                        const updatedItems = items.filter((_, idx) => idx !== itemIndex);
-                        onUpdateProgramming(exerciseId, updatedItems);
-                      }}
-                      aria-label="Remove row"
-                    >
-                      <Delete fontSize="small" />
-                    </MuiIconButton>
+                    {!isGhost && (
+                      <MuiIconButton
+                        size="small"
+                        sx={{
+                          position: "relative",
+                          color: "#222",
+                          bgcolor: "#fff",
+                          transition: "background 0.2s, color 0.2s",
+                          "&:hover": {
+                            bgcolor: "error.main",
+                            color: "#fff",
+                          },
+                        }}
+                        onClick={() => handleDeleteRow(itemIndex)}
+                        aria-label="Remove row"
+                      >
+                        <Delete fontSize="small" />
+                      </MuiIconButton>
+                    )}
                   </TableCell>
                 </TableRow>
-              ))}
-            {/* Plus button row */}
-            <TableRow>
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  color: "text.primary",
-                  fontWeight: "bold",
-                  px: { xs: 1, md: 2 },
-                }}
-              >
-                {items.length + 1}
-              </TableCell>
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  px: { xs: 1, md: 2 },
-                }}
-              >
-                <MuiIconButton
-                  size="small"
-                  onClick={handleAddRow}
-                  sx={{
-                    color: "text.primary",
-                    bgcolor: "action.hover",
-                    "&:hover": {
-                      bgcolor: "primary.light",
-                      color: "primary.contrastText",
-                    },
-                  }}
-                >
-                  <Add fontSize="small" />
-                </MuiIconButton>
-              </TableCell>
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  px: { xs: 1, md: 2 },
-                }}
-              />
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  display: { xs: "table-cell", md: "none" },
-                  px: { xs: 1, md: 2 },
-                }}
-              />
-              <TableCell
-                sx={{
-                  textAlign: "left",
-                  display: { xs: "none", md: "table-cell" },
-                  px: { xs: 1, md: 2 },
-                }}
-              />
-            </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
