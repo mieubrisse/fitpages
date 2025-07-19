@@ -37,6 +37,14 @@ function CustomDay({ workoutDays, programmingDays, selectedDate, ...props }) {
               color: (theme) => theme.palette.primary.contrastText,
             },
           }),
+        // Force programming days to be blue with !important
+        ...(hasProgramming &&
+          !hasWorkout && {
+            "&.Mui-selected": {
+              backgroundColor: (theme) => theme.palette.primary.main + " !important",
+              color: (theme) => theme.palette.primary.contrastText + " !important",
+            },
+          }),
         // Selected day (white circle) - only if not training data or programming
         ...(isSelected &&
           !hasWorkout &&
@@ -54,11 +62,14 @@ function CustomDay({ workoutDays, programmingDays, selectedDate, ...props }) {
         "&.MuiPickersDay-today": {
           borderColor: "primary.main",
         },
-        // Override Material-UI selected styling with !important
-        "&.Mui-selected": {
-          backgroundColor: "#fff !important",
-          color: "text.primary !important",
-        },
+        // Override Material-UI selected styling with !important - but only for non-programming days
+        ...(isSelected &&
+          !hasProgramming && {
+            "&.Mui-selected": {
+              backgroundColor: "#fff !important",
+              color: "text.primary !important",
+            },
+          }),
       }}
     />
   );
