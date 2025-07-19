@@ -14,7 +14,7 @@ import {
 import { Delete, Add } from "@mui/icons-material";
 import InputAdornment from "@mui/material/InputAdornment";
 import { ChatBubbleOutline } from "@mui/icons-material";
-import { useMemo } from "react";
+import { useMemo, useCallback, memo } from "react";
 import {
   DndContext,
   closestCenter,
@@ -46,13 +46,13 @@ export default function ProgrammingCard({
   onUpdateProgramming,
 }) {
   // Helper: is a set empty?
-  const isEmptySet = (set) => {
+  const isEmptySet = useCallback((set) => {
     return (
       (!set.metric_weight || set.metric_weight === "" || set.metric_weight === 0) &&
       (!set.reps || set.reps === "" || set.reps === 0) &&
       (!set.comment || set.comment === "")
     );
-  };
+  }, []);
 
   // Track real sets and always append a ghost set
   const realSets = useMemo(() => {
@@ -65,10 +65,17 @@ export default function ProgrammingCard({
       trimmed.pop();
     }
     // Always show at least one empty set (ghost set)
-    return trimmed.length === 0
-      ? [{ metric_weight: "", reps: "", comment: "" }]
-      : [...trimmed, { metric_weight: "", reps: "", comment: "" }];
-  }, [items]);
+    const result =
+      trimmed.length === 0
+        ? [{ metric_weight: "", reps: "", comment: "", id: `ghost-${exerciseId}` }]
+        : [...trimmed, { metric_weight: "", reps: "", comment: "", id: `ghost-${exerciseId}` }];
+
+    // Ensure all items have stable IDs based on their content
+    return result.map((item, index) => ({
+      ...item,
+      id: item.id || `set-${exerciseId}-${index}-${JSON.stringify(item)}`,
+    }));
+  }, [items, isEmptySet, exerciseId]);
 
   // Handle updating a field value
   const handleFieldUpdate = (rowIndex, field, value) => {
@@ -108,8 +115,8 @@ export default function ProgrammingCard({
     if (active.id !== over.id) {
       // Get the real sets (excluding ghost set)
       const realSetsOnly = realSets.filter((_, index) => index !== realSets.length - 1);
-      const oldIndex = parseInt(active.id.split("-")[1]);
-      const newIndex = parseInt(over.id.split("-")[1]);
+      const oldIndex = realSetsOnly.findIndex((item) => item.id === active.id);
+      const newIndex = realSetsOnly.findIndex((item) => item.id === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
         const newOrder = arrayMove(realSetsOnly, oldIndex, newIndex);
@@ -126,9 +133,9 @@ export default function ProgrammingCard({
   );
 
   // Sortable row component
-  const SortableTableRow = ({ item, itemIndex, isGhost }) => {
+  const SortableTableRow = memo(({ item, itemIndex, isGhost }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-      id: isGhost ? `ghost-${itemIndex}` : `set-${itemIndex}`,
+      id: item.id,
       disabled: isGhost,
     });
 
@@ -309,7 +316,7 @@ export default function ProgrammingCard({
         </TableCell>
       </TableRow>
     );
-  };
+  });
 
   return (
     <Paper
@@ -442,16 +449,14 @@ export default function ProgrammingCard({
               }}
             >
               <SortableContext
-                items={realSets.map((_, index) =>
-                  index === realSets.length - 1 ? `ghost-${index}` : `set-${index}`
-                )}
+                items={realSets.map((item) => item.id)}
                 strategy={verticalListSortingStrategy}
               >
                 {realSets.map((item, itemIndex) => {
                   const isGhost = itemIndex === realSets.length - 1 && isEmptySet(item);
                   return (
                     <SortableTableRow
-                      key={itemIndex}
+                      key={item.id}
                       item={item}
                       itemIndex={itemIndex}
                       isGhost={isGhost}

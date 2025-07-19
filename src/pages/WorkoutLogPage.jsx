@@ -222,19 +222,9 @@ export default function WorkoutLogPage() {
 
         setDateToExercise(dateToExerciseMap);
         setExerciseToDate(exerciseToDateMap);
-        console.log("dateToExercise data structure loaded:", dateToExerciseMap);
-        console.log("exerciseToDate data structure loaded:", exerciseToDateMap);
-        console.log(
-          "Sample exerciseToDate entry:",
-          Object.keys(exerciseToDateMap)[0]
-            ? exerciseToDateMap[Object.keys(exerciseToDateMap)[0]]
-            : "No data"
-        );
       } else {
         setDateToExercise({});
         setExerciseToDate({});
-        console.log("dateToExercise data structure loaded: {}");
-        console.log("exerciseToDate data structure loaded: {}");
       }
     } catch (err) {
       console.error("Error loading dateToExercise data:", err);
