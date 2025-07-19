@@ -52,7 +52,6 @@ export default function WorkoutLogPage() {
     const d = new Date();
     return parseISO(formatDateLocal(new Date(d.getFullYear(), d.getMonth(), 1)));
   });
-  const [workoutDays, setWorkoutDays] = useState([]);
   const [exerciseIds, setExerciseIds] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [searchSelected, setSearchSelected] = useState(null);
@@ -66,20 +65,31 @@ export default function WorkoutLogPage() {
   const [exerciseToDate, setExerciseToDate] = useState({});
   const [dateToWorkoutComment, setDateToWorkoutComment] = useState({});
 
+  // Programming state - moved from DailyLog.jsx
+  const PROGRAMMING_KEY = "fitpages_dateToProgramming";
+  const [dateToProgramming, setDateToProgramming] = useState(() => {
+    try {
+      const stored = localStorage.getItem(PROGRAMMING_KEY);
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+
   const { db, loading, error } = useDatabase();
 
   useEffect(() => {
     localStorage.setItem("fitpages_language", language);
   }, [language]);
 
-  // Generate workoutDays from dateToExercise data structure
+  // Sync dateToProgramming to localStorage
   useEffect(() => {
-    if (!dateToExercise) return;
-
-    const days = Object.keys(dateToExercise).sort();
-    setWorkoutDays(days);
-    console.log("workoutDays updated from dateToExercise:", days);
-  }, [dateToExercise]);
+    try {
+      localStorage.setItem(PROGRAMMING_KEY, JSON.stringify(dateToProgramming));
+    } catch (error) {
+      console.error("Failed to save programming to localStorage:", error);
+    }
+  }, [dateToProgramming]);
 
   // Fetch all exercise IDs and i18n map on mount
   useEffect(() => {
@@ -396,10 +406,10 @@ export default function WorkoutLogPage() {
             onDateSelect={selectDate}
             calendarMonth={calendarMonth}
             onMonthChange={handleMonthChange}
-            workoutDays={workoutDays}
             i18nMap={i18nMap}
             language={language}
             dateToExercise={dateToExercise}
+            dateToProgramming={dateToProgramming}
           />
           <Box
             sx={{
@@ -436,6 +446,8 @@ export default function WorkoutLogPage() {
                   exerciseToDate={exerciseToDate}
                   db={db}
                   workoutComment={dateToWorkoutComment[selectedDate] || ""}
+                  dateToProgramming={dateToProgramming}
+                  setDateToProgramming={setDateToProgramming}
                 />
               </Box>
             </Paper>
@@ -461,9 +473,9 @@ export default function WorkoutLogPage() {
           onDateSelect={selectDate}
           calendarMonth={calendarMonth}
           onMonthChange={handleMonthChange}
-          workoutDays={workoutDays}
           language={language}
           dateToExercise={dateToExercise}
+          dateToProgramming={dateToProgramming}
         />
       </Box>
     </Container>

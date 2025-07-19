@@ -7,10 +7,10 @@ export default function CalendarPanel({
   onDateSelect,
   calendarMonth,
   onMonthChange,
-  workoutDays,
   i18nMap,
   language,
   dateToExercise,
+  dateToProgramming,
 }) {
   const [hoveredDay, setHoveredDay] = useState(null);
   const [previewExercises, setPreviewExercises] = useState([]);
@@ -85,10 +85,11 @@ export default function CalendarPanel({
           onDateSelect={onDateSelect}
           calendarMonth={calendarMonth}
           onMonthChange={onMonthChange}
-          workoutDays={workoutDays}
           language={language}
           showHoverPreview={true}
           onDayHover={setHoveredDay}
+          dateToProgramming={dateToProgramming}
+          dateToExercise={dateToExercise}
         />
       </Box>
       <Paper

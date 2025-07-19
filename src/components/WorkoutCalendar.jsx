@@ -6,12 +6,7 @@ import { format, parseISO } from "date-fns";
 import { PickersDay } from "@mui/x-date-pickers/PickersDay";
 import { enUS, pt } from "date-fns/locale";
 
-function CustomDay({ workoutDays, programmingDays, selectedDate, ...props }) {
-  const dateStr = format(props.day, "yyyy-MM-dd");
-  const hasWorkout = workoutDays.includes(dateStr);
-  const hasProgramming = programmingDays && programmingDays.includes(dateStr);
-  const isSelected = dateStr === selectedDate;
-
+function CustomDay({ hasWorkout, hasProgramming, isSelected, ...props }) {
   // Build styling dictionary based on priority
   let dayStyle = {};
 
@@ -75,8 +70,8 @@ export default function WorkoutCalendar({
   onDateSelect,
   calendarMonth,
   onMonthChange,
-  workoutDays = [],
-  programmingDays = [],
+  dateToExercise = {},
+  dateToProgramming = {},
   language = "EN",
   showHoverPreview = false,
   onDayHover,
@@ -104,9 +99,19 @@ export default function WorkoutCalendar({
             day: (props) => (
               <CustomDay
                 {...props}
-                workoutDays={workoutDays}
-                programmingDays={programmingDays}
-                selectedDate={selectedDate}
+                hasWorkout={
+                  dateToExercise &&
+                  dateToExercise[format(props.day, "yyyy-MM-dd")] &&
+                  dateToExercise[format(props.day, "yyyy-MM-dd")].exerciseOrdering &&
+                  dateToExercise[format(props.day, "yyyy-MM-dd")].exerciseOrdering.length > 0
+                }
+                hasProgramming={
+                  dateToProgramming &&
+                  dateToProgramming[format(props.day, "yyyy-MM-dd")] &&
+                  dateToProgramming[format(props.day, "yyyy-MM-dd")].exerciseOrdering &&
+                  dateToProgramming[format(props.day, "yyyy-MM-dd")].exerciseOrdering.length > 0
+                }
+                isSelected={format(props.day, "yyyy-MM-dd") === selectedDate}
                 onMouseEnter={
                   showHoverPreview ? () => onDayHover?.(format(props.day, "yyyy-MM-dd")) : undefined
                 }

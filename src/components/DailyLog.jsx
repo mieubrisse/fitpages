@@ -63,6 +63,8 @@ export default function DailyLog({
   dateToExercise,
   exerciseToDate,
   workoutComment = "",
+  dateToProgramming,
+  setDateToProgramming,
 }) {
   const [rows, setRows] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
@@ -75,29 +77,7 @@ export default function DailyLog({
 
   // Programming state
   const PROGRAMMING_KEY = "fitpages_dateToProgramming";
-  const [dateToProgramming, setDateToProgramming] = useState(() => {
-    try {
-      const stored = localStorage.getItem(PROGRAMMING_KEY);
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  });
-  // Error state for localStorage sync
   const [programmingStorageError, setProgrammingStorageError] = useState(null);
-
-  // Sync to localStorage when dateToProgramming changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(PROGRAMMING_KEY, JSON.stringify(dateToProgramming));
-    } catch {
-      setProgrammingStorageError(
-        language && language.toLowerCase() === "pt"
-          ? "Erro ao salvar o plano de treino no armazenamento local."
-          : "Failed to save training programming to local storage."
-      );
-    }
-  }, [dateToProgramming]);
 
   // Select locale for date-fns
   const locale = language && language.toLowerCase() === "pt" ? pt : enUS;

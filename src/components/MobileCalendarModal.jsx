@@ -9,8 +9,8 @@ export default function MobileCalendarModal({
   onDateSelect,
   calendarMonth,
   onMonthChange,
-  workoutDays = [],
   language = "EN",
+  dateToProgramming,
   dateToExercise,
 }) {
   const handleDateSelect = (date) => {
@@ -68,9 +68,10 @@ export default function MobileCalendarModal({
             onDateSelect={handleDateSelect}
             calendarMonth={calendarMonth}
             onMonthChange={onMonthChange}
-            workoutDays={workoutDays}
             language={language}
             showHoverPreview={false}
+            dateToProgramming={dateToProgramming}
+            dateToExercise={dateToExercise}
           />
         </Box>
       </Box>
