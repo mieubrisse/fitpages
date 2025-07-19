@@ -487,7 +487,14 @@ export default function DailyLog({
                 onChange={handleProgrammingSearchSelect}
                 sx={{ width: "100%" }}
                 getOptionLabel={(option) => getDisplayName(option)}
-                renderOption={(props, option) => <li {...props}>{getDisplayName(option)}</li>}
+                renderOption={(props, option) => {
+                  const { key, ...otherProps } = props;
+                  return (
+                    <li key={key} {...otherProps}>
+                      {getDisplayName(option)}
+                    </li>
+                  );
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}

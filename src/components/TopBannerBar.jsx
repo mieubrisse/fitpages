@@ -70,7 +70,14 @@ export default function TopBannerBar({
           onChange={handleSearchSelect}
           sx={{ width: 630, mr: { md: 4, xs: 2 } }}
           getOptionLabel={(option) => getDisplayName(option)}
-          renderOption={(props, option) => <li {...props}>{getDisplayName(option)}</li>}
+          renderOption={(props, option) => {
+            const { key, ...otherProps } = props;
+            return (
+              <li key={key} {...otherProps}>
+                {getDisplayName(option)}
+              </li>
+            );
+          }}
           renderInput={(params) => (
             <TextField {...params} label={searchLabel} variant="outlined" size="small" />
           )}

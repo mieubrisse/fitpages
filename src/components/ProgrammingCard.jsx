@@ -362,70 +362,70 @@ export default function ProgrammingCard({
       >
         <Delete fontSize="small" />
       </MuiIconButton>
-      <TableContainer component={Box} sx={{ mb: 2, borderRadius: 2, overflow: "hidden" }}>
-        <Table sx={{ minWidth: 650, tableLayout: "fixed" }} aria-label="programming table">
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  color: "text.primary",
-                  fontWeight: "bold",
-                  px: { xs: 1, md: 2 },
-                  width: "60px",
-                }}
-              >
-                #
-              </TableCell>
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  color: "text.primary",
-                  fontWeight: "bold",
-                  px: { xs: 1, md: 2 },
-                }}
-              >
-                {language === "PT" ? "Peso" : "Weight"}
-              </TableCell>
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  color: "text.primary",
-                  fontWeight: "bold",
-                  px: { xs: 1, md: 2 },
-                }}
-              >
-                {language === "PT" ? "Reps" : "Reps"}
-              </TableCell>
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  color: "text.primary",
-                  fontWeight: "bold",
-                  px: { xs: 1, md: 2 },
-                }}
-              >
-                {language === "PT" ? "Comentário" : "Comment"}
-              </TableCell>
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  color: "text.primary",
-                  fontWeight: "bold",
-                  px: { xs: 1, md: 2 },
-                  width: "60px",
-                }}
-              >
-                {language === "PT" ? "Ação" : "Action"}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-            modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-          >
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+      >
+        <TableContainer sx={{ mb: 2, borderRadius: 2, overflow: "hidden" }}>
+          <Table sx={{ minWidth: 650, tableLayout: "fixed" }} aria-label="programming table">
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    textAlign: "center",
+                    color: "text.primary",
+                    fontWeight: "bold",
+                    px: { xs: 1, md: 2 },
+                    width: "60px",
+                  }}
+                >
+                  #
+                </TableCell>
+                <TableCell
+                  sx={{
+                    textAlign: "center",
+                    color: "text.primary",
+                    fontWeight: "bold",
+                    px: { xs: 1, md: 2 },
+                  }}
+                >
+                  {language === "PT" ? "Peso" : "Weight"}
+                </TableCell>
+                <TableCell
+                  sx={{
+                    textAlign: "center",
+                    color: "text.primary",
+                    fontWeight: "bold",
+                    px: { xs: 1, md: 2 },
+                  }}
+                >
+                  {language === "PT" ? "Reps" : "Reps"}
+                </TableCell>
+                <TableCell
+                  sx={{
+                    textAlign: "center",
+                    color: "text.primary",
+                    fontWeight: "bold",
+                    px: { xs: 1, md: 2 },
+                  }}
+                >
+                  {language === "PT" ? "Comentário" : "Comment"}
+                </TableCell>
+                <TableCell
+                  sx={{
+                    textAlign: "center",
+                    color: "text.primary",
+                    fontWeight: "bold",
+                    px: { xs: 1, md: 2 },
+                    width: "60px",
+                  }}
+                >
+                  {language === "PT" ? "Ação" : "Action"}
+                </TableCell>
+              </TableRow>
+            </TableHead>
             <TableBody
               sx={{
                 // Prevent scrolling during drag operations
@@ -460,9 +460,9 @@ export default function ProgrammingCard({
                 })}
               </SortableContext>
             </TableBody>
-          </DndContext>
-        </Table>
-      </TableContainer>
+          </Table>
+        </TableContainer>
+      </DndContext>
       {children}
     </Paper>
   );
