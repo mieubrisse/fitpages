@@ -12,64 +12,59 @@ function CustomDay({ workoutDays, programmingDays, selectedDate, ...props }) {
   const hasProgramming = programmingDays && programmingDays.includes(dateStr);
   const isSelected = dateStr === selectedDate;
 
+  // Build styling dictionary based on priority
+  let dayStyle = {};
+
+  if (isSelected) {
+    // Selected day takes highest priority
+    dayStyle = {
+      backgroundColor: "#fff",
+      color: (theme) => theme.palette.text.primary,
+      fontWeight: "bold",
+      borderRadius: "50%",
+      boxShadow: 3,
+      "&:hover": {
+        backgroundColor: (theme) => theme.palette.action.hover,
+      },
+      // Override Material-UI selected styling
+      "&.Mui-selected": {
+        backgroundColor: "#fff !important",
+        color: "text.primary !important",
+      },
+    };
+  } else if (hasWorkout) {
+    // Training data takes second priority
+    dayStyle = {
+      backgroundColor: (theme) => theme.palette.action.selected,
+      color: (theme) => theme.palette.text.primary,
+      "&:hover": {
+        backgroundColor: (theme) => theme.palette.action.hover,
+      },
+    };
+  } else if (hasProgramming) {
+    // Programming scheduled days (blue circle) - lowest priority
+    dayStyle = {
+      backgroundColor: (theme) => theme.palette.primary.main,
+      color: (theme) => theme.palette.primary.contrastText,
+      fontWeight: "bold",
+      borderRadius: "50%",
+      boxShadow: 3,
+      "&:hover": {
+        backgroundColor: (theme) => theme.palette.primary.dark,
+        color: (theme) => theme.palette.primary.contrastText,
+      },
+    };
+  }
+
   return (
     <PickersDay
       {...props}
       sx={{
-        // Training data takes highest priority
-        ...(hasWorkout && {
-          backgroundColor: (theme) => theme.palette.action.selected,
-          color: (theme) => theme.palette.text.primary,
-          "&:hover": {
-            backgroundColor: (theme) => theme.palette.action.hover,
-          },
-        }),
-        // Programming scheduled days (blue circle)
-        ...(hasProgramming &&
-          !hasWorkout && {
-            backgroundColor: (theme) => theme.palette.primary.main,
-            color: (theme) => theme.palette.primary.contrastText,
-            fontWeight: "bold",
-            borderRadius: "50%",
-            boxShadow: 3,
-            "&:hover": {
-              backgroundColor: (theme) => theme.palette.primary.dark,
-              color: (theme) => theme.palette.primary.contrastText,
-            },
-          }),
-        // Force programming days to be blue with !important
-        ...(hasProgramming &&
-          !hasWorkout && {
-            "&.Mui-selected": {
-              backgroundColor: (theme) => theme.palette.primary.main + " !important",
-              color: (theme) => theme.palette.primary.contrastText + " !important",
-            },
-          }),
-        // Selected day (white circle) - only if not training data or programming
-        ...(isSelected &&
-          !hasWorkout &&
-          !hasProgramming && {
-            backgroundColor: "#fff",
-            color: (theme) => theme.palette.text.primary,
-            fontWeight: "bold",
-            borderRadius: "50%",
-            boxShadow: 3,
-            "&:hover": {
-              backgroundColor: (theme) => theme.palette.action.hover,
-            },
-          }),
+        ...dayStyle,
         // Ensure today border shows
         "&.MuiPickersDay-today": {
           borderColor: "primary.main",
         },
-        // Override Material-UI selected styling with !important - but only for non-programming days
-        ...(isSelected &&
-          !hasProgramming && {
-            "&.Mui-selected": {
-              backgroundColor: "#fff !important",
-              color: "text.primary !important",
-            },
-          }),
       }}
     />
   );
